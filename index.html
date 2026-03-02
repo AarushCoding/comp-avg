@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Cube Pro</title>
+    <style>
+        :root {
+            --orange: #ff8c00;
+            --orange-glow: rgba(255, 140, 0, 0.4);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg: #0f172a;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #fff, var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group { margin-bottom: 1.5rem; }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+
+        select, input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 15px var(--orange-glow);
+        }
+
+        .time-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .stats-panel {
+            background: rgba(255, 140, 0, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 140, 0, 0.2);
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-line:last-child { margin-bottom: 0; }
+
+        .stat-label { color: #cbd5e1; font-size: 0.9rem; }
+
+        .stat-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--orange);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 1.5rem;
+        }
+
+        /* Subtle orange glow orb in background */
+        .orb {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--orange);
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="orb"></div>
+
+<div class="glass-card">
+    <h2>CUBE COMP</h2>
+    
+    <div class="input-group">
+        <label>Competition Format</label>
+        <select id="format" onchange="resetAndBuild()">
+            <option value="ao5">Average of 5 (Ao5)</option>
+            <option value="mo3">Mean of 3 (Mo3)</option>
+        </select>
+    </div>
+
+    <div id="inputContainer" class="time-grid"></div>
+
+    <div class="stats-panel">
+        <div class="stat-line">
+            <span class="stat-label" id="resLabel">Current Ao5</span>
+            <span class="stat-value" id="currentResult">--</span>
+        </div>
+        <div class="stat-line">
+            <span class="stat-label" id="bestLabel">Best Possible</span>
+            <span class="stat-value" id="bestPossible">--</span>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        Session saved automatically. Use "DNF" for fails.
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('inputContainer');
+    const formatSelect = document.getElementById('format');
+    const resultDisp = document.getElementById('currentResult');
+    const bestDisp = document.getElementById('bestPossible');
+
+    // Load saved format if exists
+    if(localStorage.getItem('cubeFormat')) {
+        formatSelect.value = localStorage.getItem('cubeFormat');
+    }
+
+    function resetAndBuild() {
+        const type = formatSelect.value;
+        const count = type === 'ao5' ? 5 : 3;
+        localStorage.setItem('cubeFormat', type);
+        
+        document.getElementById('resLabel').innerText = type === 'ao5' ? "Current Ao5" : "Current Mo3";
+        document.getElementById('bestLabel').innerText = type === 'ao5' ? "BPA (Best Possible)" : "BPM (Best Possible)";
+
+        container.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const input = document.createElement('input');
+            input.placeholder = `Solve ${i + 1}`;
+            input.dataset.index = i;
+            input.type = "text";
+            // Restore saved value
+            input.value = localStorage.getItem(`solve_${type}_${i}`) || '';
+            input.oninput = (e) => {
+                localStorage.setItem(`solve_${type}_${i}`, e.target.value);
+                calculate();
+            };
+            container.appendChild(input);
+        }
+        calculate();
+    }
+
+    function parseTime(val) {
+        if (!val || val.trim() === "") return null;
+        if (val.toLowerCase() === 'dnf') return Infinity;
+        const n = parseFloat(val);
+        return isNaN(n) ? null : n;
+    }
+
+    function calculate() {
+        const inputs = document.querySelectorAll('.time-grid input');
+        const times = Array.from(inputs).map(i => parseTime(i.value));
+        const format = formatSelect.value;
+        const totalSlots = format === 'ao5' ? 5 : 3;
+        
+        const filled = times.filter(t => t !== null);
+
+        // 1. Current Average
+        if (filled.length === totalSlots) {
+            resultDisp.innerText = runStats(filled, format);
+        } else {
+            resultDisp.innerText = "...";
+        }
+
+        // 2. Best Possible (BPA/BPM)
+        if (filled.length < totalSlots) {
+            const bestScenario = [...filled];
+            while(bestScenario.length < totalSlots) bestScenario.push(0);
+            bestDisp.innerText = runStats(bestScenario, format);
+        } else {
+            bestDisp.innerText = "Done";
+        }
+    }
+
+    function runStats(times, type) {
+        const dnfs = times.filter(t => t === Infinity).length;
+
+        if (type === 'mo3') {
+            if (dnfs > 0) return "DNF";
+            const sum = times.reduce((a, b) => a + b, 0);
+            return (sum / 3).toFixed(2);
+        }
+
+        if (type === 'ao5') {
+            if (dnfs >= 2) return "DNF";
+            const sorted = [...times].sort((a, b) => a - b);
+            // Remove best and worst
+            sorted.shift(); 
+            sorted.pop();
+            
+            if (sorted.includes(Infinity)) return "DNF";
+            const sum = sorted.reduce((a, b) => a + b, 0);
+            return (sum / 3).toFixed(2);
+        }
+    }
+
+    resetAndBuild();
+</script>
+
+</body>
+</html>
