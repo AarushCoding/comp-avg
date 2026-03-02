@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glass Cube Pro - Penalties</title>
+    <title>Cube Comp Calc</title>
     <style>
         :root {
             --orange: #ff8c00;
-            --orange-glow: rgba(255, 140, 0, 0.4);
             --glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --bg: #0f172a;
@@ -19,189 +18,184 @@
             background: radial-gradient(circle at top right, #1e293b, #0f172a);
             color: #f1f5f9;
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0;
+            min-height: 100vh; margin: 0; padding: 20px;
         }
 
         .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border);
             border-radius: 24px; padding: 2rem;
-            width: 100%; max-width: 440px;
+            width: 100%; max-width: 400px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        
-        h2 { margin: 0; font-weight: 800; background: linear-gradient(to right, #fff, var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        h2 { margin: 0; font-size: 1.2rem; letter-spacing: 1px; color: white; }
 
         .btn-reset {
             background: transparent; border: 1px solid var(--glass-border);
-            color: #94a3b8; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.7rem;
+            color: #94a3b8; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
         }
         .btn-reset:hover { border-color: var(--red); color: var(--red); }
 
-        select, input {
-            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
-            border-radius: 12px; padding: 12px; color: white; outline: none;
-        }
-
-        .solve-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-        .time-input { flex-grow: 1; font-family: monospace; }
+        .solve-row { display: flex; gap: 8px; margin-bottom: 12px; }
         
-        .penalty-btn {
-            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.05); color: #94a3b8; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.2s;
+        input {
+            flex-grow: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
+            border-radius: 10px; padding: 10px; color: white; font-family: monospace; outline: none; width: 60px;
         }
-        .penalty-btn.active-plus { border-color: var(--orange); color: var(--orange); background: rgba(255, 140, 0, 0.1); }
-        .penalty-btn.active-dnf { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); }
+        input:focus { border-color: var(--orange); }
 
-        .stats-panel {
-            background: rgba(255, 140, 0, 0.1); border-radius: 16px; padding: 1.5rem;
-            border: 1px solid rgba(255, 140, 0, 0.2); margin-top: 1.5rem;
+        .btn-p {
+            padding: 0 12px; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03); color: #64748b; cursor: pointer; font-weight: bold; font-size: 0.75rem;
+        }
+
+        .btn-p.active-plus { border-color: var(--orange); color: var(--orange); background: rgba(255, 140, 0, 0.1); }
+        .btn-p.active-dnf { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); }
+
+        .stats {
+            background: rgba(255, 140, 0, 0.05); border-radius: 16px; padding: 1.2rem;
+            border: 1px solid rgba(255, 140, 0, 0.1); margin-top: 1.5rem;
         }
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .stat-value { font-family: monospace; font-size: 1.2rem; font-weight: bold; color: var(--orange); }
-
-        .orb { position: absolute; width: 300px; height: 300px; background: var(--orange); filter: blur(120px); opacity: 0.1; z-index: -1; border-radius: 50%; }
+        .val { font-family: monospace; font-size: 1.3rem; font-weight: bold; color: var(--orange); }
+        .label { font-size: 0.9rem; color: #94a3b8; }
     </style>
 </head>
 <body>
 
-<div class="orb"></div>
-
 <div class="glass-card">
     <div class="header-row">
-        <h2>CUBE COMP</h2>
-        <button class="btn-reset" onclick="clearSession()">RESET</button>
-    </div>
-    
-    <div style="margin-bottom: 1.5rem;">
-        <select id="format" onchange="initApp()" style="width: 100%;">
-            <option value="ao5">Average of 5 (Ao5)</option>
-            <option value="mo3">Mean of 3 (Mo3)</option>
+        <h2>COMPETITION</h2>
+        <select id="format" onchange="changeFormat()" style="background:none; color:white; border:none; outline:none; cursor:pointer; font-weight: bold;">
+            <option value="ao5">Ao5</option>
+            <option value="mo3">Mo3</option>
         </select>
+        <button class="btn-reset" onclick="resetAll()">RESET</button>
     </div>
 
     <div id="solveList"></div>
 
-    <div class="stats-panel">
+    <div class="stats">
         <div class="stat-line">
-            <span id="resLabel">Current Ao5</span>
-            <span class="stat-value" id="curAvg">--</span>
+            <span class="label" id="labelRes">Current Average</span>
+            <span class="val" id="curAvg">--</span>
         </div>
         <div class="stat-line">
-            <span id="bestLabel">Best Possible</span>
-            <span class="stat-value" id="bestAvg">--</span>
+            <span class="label" id="labelBest">Best Possible</span>
+            <span class="val" id="bestAvg">--</span>
         </div>
     </div>
 </div>
 
 <script>
-    const formatSelect = document.getElementById('format');
-    const solveList = document.getElementById('solveList');
-    
-    // Load state
-    let state = JSON.parse(localStorage.getItem('cubeState')) || {
+    // Load or Initialize State
+    let state = JSON.parse(localStorage.getItem('cube_comp_v1')) || {
         format: 'ao5',
-        solves: Array(5).fill({ raw: '', plusTwo: false, dnf: false })
+        solves: []
     };
 
-    function save() {
-        localStorage.setItem('cubeState', JSON.stringify(state));
-        calculate();
-    }
-
-    function clearSession() {
-        if(confirm("Clear all times?")) {
-            state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false }));
-            save();
-            render();
-        }
-    }
-
-    function initApp() {
-        const type = formatSelect.value;
-        state.format = type;
-        const count = type === 'ao5' ? 5 : 3;
-        // Adjust array size if format changed
+    // Ensure array is properly populated on first load
+    function syncArraySize() {
+        const count = state.format === 'ao5' ? 5 : 3;
         if (state.solves.length !== count) {
-            state.solves = Array(count).fill(null).map(() => ({ raw: '', plusTwo: false, dnf: false }));
+            state.solves = Array.from({length: count}, () => ({ raw: '', plusTwo: false, dnf: false }));
         }
-        render();
     }
 
     function render() {
-        formatSelect.value = state.format;
-        solveList.innerHTML = '';
+        syncArraySize();
+        const list = document.getElementById('solveList');
+        list.innerHTML = '';
+        
         state.solves.forEach((solve, i) => {
-            const row = document.createElement('div');
-            row.className = 'solve-row';
-            row.innerHTML = `
-                <input type="text" class="time-input" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateRaw(${i}, this.value)">
-                <button class="penalty-btn ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
-                <button class="penalty-btn ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
+            const div = document.createElement('div');
+            div.className = 'solve-row';
+            div.innerHTML = `
+                <input type="text" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
+                <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
+                <button class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
             `;
-            solveList.appendChild(row);
+            list.appendChild(div);
         });
+
+        document.getElementById('format').value = state.format;
+        document.getElementById('labelRes').innerText = state.format === 'ao5' ? "Current Ao5" : "Current Mo3";
+        document.getElementById('labelBest').innerText = state.format === 'ao5' ? "Best Possible (BPA)" : "Best Possible (BPM)";
+        
         calculate();
+        localStorage.setItem('cube_comp_v1', JSON.stringify(state));
     }
 
-    function updateRaw(i, val) { state.solves[i].raw = val; save(); }
-    
+    function updateTime(i, val) { 
+        state.solves[i].raw = val; 
+        calculate(); 
+        localStorage.setItem('cube_comp_v1', JSON.stringify(state)); 
+    }
+
     function togglePlus(i) { 
         state.solves[i].plusTwo = !state.solves[i].plusTwo; 
-        if(state.solves[i].plusTwo) state.solves[i].dnf = false;
-        render(); save(); 
+        if(state.solves[i].plusTwo) state.solves[i].dnf = false; 
+        render(); 
     }
 
     function toggleDNF(i) { 
         state.solves[i].dnf = !state.solves[i].dnf; 
-        if(state.solves[i].dnf) state.solves[i].plusTwo = false;
-        render(); save(); 
+        if(state.solves[i].dnf) state.solves[i].plusTwo = false; 
+        render(); 
+    }
+    
+    function changeFormat() {
+        state.format = document.getElementById('format').value;
+        state.solves = []; // Clear array so syncArraySize recreates it
+        render();
     }
 
-    function getFinalTime(solve) {
+    function resetAll() {
+        if(confirm("Clear current round?")) {
+            state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false }));
+            render();
+        }
+    }
+
+    function getVal(solve) {
         if (solve.dnf) return Infinity;
-        let t = parseFloat(solve.raw);
-        if (isNaN(t)) return null;
-        return solve.plusTwo ? t + 2 : t;
+        let n = parseFloat(solve.raw);
+        if (isNaN(n)) return null;
+        return solve.plusTwo ? n + 2 : n;
     }
 
     function calculate() {
-        const finalTimes = state.solves.map(getFinalTime);
-        const filled = finalTimes.filter(t => t !== null);
+        const times = state.solves.map(getVal);
+        const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
 
-        document.getElementById('resLabel').innerText = state.format === 'ao5' ? "Current Ao5" : "Current Mo3";
-        
         // Current Average
-        if (filled.length === count) {
-            document.getElementById('curAvg').innerText = runCalc(filled, state.format);
-        } else {
-            document.getElementById('curAvg').innerText = "Waiting...";
-        }
+        document.getElementById('curAvg').innerText = (filled.length === count) ? runMath(filled) : "--";
 
         // Best Possible
         if (filled.length < count) {
-            const bestCase = [...filled];
-            while(bestCase.length < count) bestCase.push(0);
-            document.getElementById('bestAvg').innerText = runCalc(bestCase, state.format);
+            let best = [...filled];
+            while(best.length < count) best.push(0);
+            document.getElementById('bestAvg').innerText = runMath(best);
         } else {
             document.getElementById('bestAvg').innerText = "Final";
         }
     }
 
-    function runCalc(times, type) {
-        const dnfs = times.filter(t => t === Infinity).length;
-        if (type === 'mo3') {
-            return dnfs > 0 ? "DNF" : (times.reduce((a,b)=>a+b,0)/3).toFixed(2);
+    function runMath(t) {
+        const dnfs = t.filter(x => x === Infinity).length;
+        if (state.format === 'mo3') {
+            return dnfs > 0 ? "DNF" : (t.reduce((a,b)=>a+b,0)/3).toFixed(2);
         }
+        // Ao5 Logic
         if (dnfs >= 2) return "DNF";
-        const sorted = [...times].sort((a,b) => a - b);
-        sorted.shift(); sorted.pop(); // Remove min/max
-        if (sorted.includes(Infinity)) return "DNF";
-        return (sorted.reduce((a,b)=>a+b,0)/3).toFixed(2);
+        let s = [...t].sort((a,b)=>a-b);
+        s.shift(); // Remove best
+        s.pop();   // Remove worst
+        return s.includes(Infinity) ? "DNF" : (s.reduce((a,b)=>a+b,0)/3).toFixed(2);
     }
 
     render();
