@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orange Cube Pro</title>
+    <title>Comp Avg</title>
     <style>
         :root {
             --orange: #ff8c00;
@@ -26,7 +26,7 @@
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 28px; padding: 2rem;
-            width: 100%; max-width: 400px;
+            width: 100%; max-width: 420px;
             box-shadow: 0 0 40px rgba(255, 140, 0, 0.15);
         }
 
@@ -59,21 +59,18 @@
             border-radius: 20px; padding: 1.5rem;
             border: 1px solid var(--glass-border); margin-top: 1.5rem;
         }
-        .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .val { font-family: 'Courier New', monospace; font-size: 1.4rem; font-weight: bold; color: var(--orange-bright); }
-        .label { font-size: 0.85rem; color: #b08d65; }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+        .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--orange-bright); }
+        .label { font-size: 0.85rem; color: #b08d65; font-weight: 600; }
 
-        .goal-box {
-            margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border);
-            font-size: 0.8rem; color: #d4a773; text-align: center; font-style: italic;
-        }
+        .hint { font-size: 0.7rem; color: #845c2e; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="glass-card">
     <div class="header-row">
-        <h2>Comp Calc</h2>
+        <h2>Comp Avg</h2>
         <select id="format" onchange="changeFormat()" style="background:none; color:var(--orange); border:none; outline:none; cursor:pointer; font-weight: bold; font-size: 0.9rem;">
             <option value="ao5">Ao5</option>
             <option value="mo3">Mo3</option>
@@ -85,19 +82,23 @@
 
     <div class="stats">
         <div class="stat-line">
-            <span class="label" id="labelRes">Current Result</span>
+            <span class="label">Current Result</span>
             <span class="val" id="curAvg">--</span>
         </div>
         <div class="stat-line">
-            <span class="label" id="labelBest">Best Possible</span>
+            <span class="label">BPA</span>
             <span class="val" id="bestAvg">--</span>
         </div>
-        <div id="goalBox" class="goal-box">Enter times to see requirements</div>
+        <div class="stat-line">
+            <span class="label">WPA</span>
+            <span class="val" id="worstAvg">--</span>
+        </div>
     </div>
+    <div class="hint">Supports 1:05.22 or 65.22</div>
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('cube_orange_v4')) || {
+    let state = JSON.parse(localStorage.getItem('cube_comp_v5')) || {
         format: 'ao5',
         solves: []
     };
@@ -109,6 +110,28 @@
         }
     }
 
+    function parseToSeconds(str) {
+        if (!str || str.trim() === "") return null;
+        if (str.includes(':')) {
+            const parts = str.split(':');
+            const mins = parseFloat(parts[0]) || 0;
+            const secs = parseFloat(parts[1]) || 0;
+            return (mins * 60) + secs;
+        }
+        return parseFloat(str);
+    }
+
+    function formatTime(seconds) {
+        if (seconds === Infinity) return "DNF";
+        if (seconds === null || isNaN(seconds)) return "--";
+        if (seconds >= 60) {
+            const mins = Math.floor(seconds / 60);
+            const secs = (seconds % 60).toFixed(2);
+            return `${mins}:${secs.padStart(5, '0')}`;
+        }
+        return seconds.toFixed(2);
+    }
+
     function render() {
         syncArraySize();
         const list = document.getElementById('solveList');
@@ -118,7 +141,7 @@
             const div = document.createElement('div');
             div.className = 'solve-row';
             div.innerHTML = `
-                <input type="text" placeholder="Time ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
+                <input type="text" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
                 <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
                 <button class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
             `;
@@ -127,13 +150,13 @@
 
         document.getElementById('format').value = state.format;
         calculate();
-        localStorage.setItem('cube_orange_v4', JSON.stringify(state));
+        localStorage.setItem('cube_comp_v5', JSON.stringify(state));
     }
 
     function updateTime(i, val) { 
         state.solves[i].raw = val; 
         calculate(); 
-        localStorage.setItem('cube_orange_v4', JSON.stringify(state)); 
+        localStorage.setItem('cube_comp_v5', JSON.stringify(state)); 
     }
 
     function togglePlus(i) { 
@@ -163,8 +186,8 @@
 
     function getVal(solve) {
         if (solve.dnf) return Infinity;
-        let n = parseFloat(solve.raw);
-        if (isNaN(n)) return null;
+        let n = parseToSeconds(solve.raw);
+        if (n === null || isNaN(n)) return null;
         return solve.plusTwo ? n + 2 : n;
     }
 
@@ -173,46 +196,37 @@
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
 
-        // Current Avg
-        document.getElementById('curAvg').innerText = (filled.length === count) ? runMath(filled) : "--";
+        // Current Result
+        document.getElementById('curAvg').innerText = (filled.length === count) ? formatTime(runMath(filled)) : "--";
 
-        // Best Possible
+        // BPA / WPA
         if (filled.length < count) {
-            let best = [...filled];
-            while(best.length < count) best.push(0);
-            document.getElementById('bestAvg').innerText = runMath(best);
-            updateGoal(filled, count);
+            // BPA: Fill remaining with 0.00
+            let bpaArr = [...filled];
+            while(bpaArr.length < count) bpaArr.push(0);
+            document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
+
+            // WPA: Fill remaining with DNF (Infinity)
+            let wpaArr = [...filled];
+            while(wpaArr.length < count) wpaArr.push(Infinity);
+            document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
         } else {
             document.getElementById('bestAvg').innerText = "Final";
-            document.getElementById('goalBox').innerText = "Round Complete";
-        }
-    }
-
-    function updateGoal(filled, count) {
-        const goalBox = document.getElementById('goalBox');
-        if (state.format === 'ao5' && filled.length === 4) {
-            // Logic for "What do I need for a Sub-X?"
-            // We find the current 3 counting times if the next solve is 0.00
-            const sorted = [...filled, 0].sort((a,b) => a-b);
-            sorted.shift(); // Remove best (the 0)
-            sorted.pop();   // Remove worst
-            const currentSum = sorted.reduce((a,b)=>a+b,0);
-            const target = Math.ceil(runMath([...filled, 0])) + 1; // Example target
-            goalBox.innerText = `You have 4 times. Finish strong!`;
-        } else {
-            goalBox.innerText = `Keep entering times...`;
+            document.getElementById('worstAvg').innerText = "Final";
         }
     }
 
     function runMath(t) {
         const dnfs = t.filter(x => x === Infinity).length;
         if (state.format === 'mo3') {
-            return dnfs > 0 ? "DNF" : (t.reduce((a,b)=>a+b,0)/3).toFixed(2);
+            return dnfs > 0 ? Infinity : (t.reduce((a,b)=>a+b,0)/3);
         }
-        if (dnfs >= 2) return "DNF";
+        // Ao5
+        if (dnfs >= 2) return Infinity;
         let s = [...t].sort((a,b)=>a-b);
-        s.shift(); s.pop();
-        return s.includes(Infinity) ? "DNF" : (s.reduce((a,b)=>a+b,0)/3).toFixed(2);
+        s.shift(); // Remove best
+        s.pop();   // Remove worst
+        return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
     }
 
     render();
