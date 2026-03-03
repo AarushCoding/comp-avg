@@ -33,19 +33,26 @@
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         h2 { margin: 0; font-size: 1.1rem; letter-spacing: 3px; color: var(--orange); text-transform: uppercase; }
 
-        .btn-reset {
+        .btn-reset, .btn-copy {
             background: transparent; border: 1px solid var(--glass-border);
             color: var(--orange); padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; transition: 0.3s;
         }
-        .btn-reset:hover { background: rgba(255, 140, 0, 0.1); border-color: var(--orange-bright); }
+        .btn-reset:hover, .btn-copy:hover { background: rgba(255, 140, 0, 0.1); border-color: var(--orange-bright); }
 
-        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; position: relative; }
         
         input {
             flex-grow: 1; background: rgba(255, 140, 0, 0.05); border: 1px solid var(--glass-border);
             border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; outline: none; font-size: 1rem;
         }
-        input:focus { border-color: var(--orange); box-shadow: 0 0 10px rgba(255, 140, 0, 0.2); }
+        
+        /* Strikes only apply when the parent has the .ao5-complete class */
+        .strike input {
+            color: #845c2e;
+            text-decoration: line-through;
+            text-decoration-color: rgba(255, 140, 0, 0.6);
+            text-decoration-thickness: 2px;
+        }
 
         .btn-p {
             padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border);
@@ -63,6 +70,7 @@
         .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--orange-bright); }
         .label { font-size: 0.85rem; color: #b08d65; font-weight: 600; }
 
+        .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .hint { font-size: 0.7rem; color: #845c2e; text-align: center; margin-top: 10px; }
     </style>
 </head>
@@ -94,11 +102,15 @@
             <span class="val" id="worstAvg">--</span>
         </div>
     </div>
-    <div class="hint">Good luck!!</div>
+
+    <div class="action-footer">
+        <button class="btn-copy" onclick="copyToClipboard()">COPY RESULTS</button>
+    </div>
+    <div class="hint">GOOD LUCK!</div>
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('cube_comp_v5')) || {
+    let state = JSON.parse(localStorage.getItem('cube_comp_v7')) || {
         format: 'ao5',
         solves: []
     };
@@ -137,9 +149,22 @@
         const list = document.getElementById('solveList');
         list.innerHTML = '';
         
+        const currentTimes = state.solves.map((s, idx) => ({ val: getVal(s), index: idx }));
+        const filled = currentTimes.filter(t => t.val !== null);
+        
+        let bestIdx = -1, worstIdx = -1;
+
+        // ONLY calculate strikes if format is Ao5 and it's full
+        if (state.format === 'ao5' && filled.length === 5) {
+            const sorted = [...filled].sort((a, b) => a.val - b.val);
+            bestIdx = sorted[0].index;
+            worstIdx = sorted[4].index;
+        }
+
         state.solves.forEach((solve, i) => {
+            const isStrike = (i === bestIdx || i === worstIdx);
             const div = document.createElement('div');
-            div.className = 'solve-row';
+            div.className = `solve-row ${isStrike ? 'strike' : ''}`;
             div.innerHTML = `
                 <input type="text" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
                 <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
@@ -150,39 +175,15 @@
 
         document.getElementById('format').value = state.format;
         calculate();
-        localStorage.setItem('cube_comp_v5', JSON.stringify(state));
+        localStorage.setItem('cube_comp_v7', JSON.stringify(state));
     }
 
-    function updateTime(i, val) { 
-        state.solves[i].raw = val; 
-        calculate(); 
-        localStorage.setItem('cube_comp_v5', JSON.stringify(state)); 
-    }
-
-    function togglePlus(i) { 
-        state.solves[i].plusTwo = !state.solves[i].plusTwo; 
-        if(state.solves[i].plusTwo) state.solves[i].dnf = false; 
-        render(); 
-    }
-
-    function toggleDNF(i) { 
-        state.solves[i].dnf = !state.solves[i].dnf; 
-        if(state.solves[i].dnf) state.solves[i].plusTwo = false; 
-        render(); 
-    }
+    function updateTime(i, val) { state.solves[i].raw = val; calculate(); localStorage.setItem('cube_comp_v7', JSON.stringify(state)); render(); }
+    function togglePlus(i) { state.solves[i].plusTwo = !state.solves[i].plusTwo; if(state.solves[i].plusTwo) state.solves[i].dnf = false; render(); }
+    function toggleDNF(i) { state.solves[i].dnf = !state.solves[i].dnf; if(state.solves[i].dnf) state.solves[i].plusTwo = false; render(); }
     
-    function changeFormat() {
-        state.format = document.getElementById('format').value;
-        state.solves = [];
-        render();
-    }
-
-    function resetAll() {
-        if(confirm("Reset all times?")) {
-            state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false }));
-            render();
-        }
-    }
+    function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; render(); }
+    function resetAll() { if(confirm("Reset current session?")) { state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false })); render(); } }
 
     function getVal(solve) {
         if (solve.dnf) return Infinity;
@@ -196,19 +197,13 @@
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
 
-        // Current Result
-        document.getElementById('curAvg').innerText = (filled.length === count) ? formatTime(runMath(filled)) : "--";
+        const res = (filled.length === count) ? formatTime(runMath(filled)) : "--";
+        document.getElementById('curAvg').innerText = res;
 
-        // BPA / WPA
         if (filled.length < count) {
-            // BPA: Fill remaining with 0.00
-            let bpaArr = [...filled];
-            while(bpaArr.length < count) bpaArr.push(0);
+            let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
-
-            // WPA: Fill remaining with DNF (Infinity)
-            let wpaArr = [...filled];
-            while(wpaArr.length < count) wpaArr.push(Infinity);
+            let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
             document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
         } else {
             document.getElementById('bestAvg').innerText = "Final";
@@ -218,15 +213,22 @@
 
     function runMath(t) {
         const dnfs = t.filter(x => x === Infinity).length;
-        if (state.format === 'mo3') {
-            return dnfs > 0 ? Infinity : (t.reduce((a,b)=>a+b,0)/3);
-        }
-        // Ao5
+        if (state.format === 'mo3') return dnfs > 0 ? Infinity : (t.reduce((a,b)=>a+b,0)/3);
         if (dnfs >= 2) return Infinity;
         let s = [...t].sort((a,b)=>a-b);
-        s.shift(); // Remove best
-        s.pop();   // Remove worst
+        s.shift(); s.pop();
         return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
+    }
+
+    function copyToClipboard() {
+        const timesStr = state.solves.map((s) => {
+            let time = s.dnf ? "DNF" : (s.raw || "0.00");
+            if (s.plusTwo) time += "+";
+            return time;
+        }).join(", ");
+        const avg = document.getElementById('curAvg').innerText;
+        const text = `Comp Avg [${state.format.toUpperCase()}]: ${timesStr} | Result: ${avg}`;
+        navigator.clipboard.writeText(text).then(() => alert("Results copied!"));
     }
 
     render();
