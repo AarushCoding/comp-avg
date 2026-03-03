@@ -46,7 +46,7 @@
             border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; outline: none; font-size: 1rem;
         }
         
-        /* Strikes only apply when the parent has the .ao5-complete class */
+        /* Smooth strike-through */
         .strike input {
             color: #845c2e;
             text-decoration: line-through;
@@ -71,7 +71,6 @@
         .label { font-size: 0.85rem; color: #b08d65; font-weight: 600; }
 
         .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        .hint { font-size: 0.7rem; color: #845c2e; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -106,11 +105,10 @@
     <div class="action-footer">
         <button class="btn-copy" onclick="copyToClipboard()">COPY RESULTS</button>
     </div>
-    <div class="hint">GOOD LUCK!</div>
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('cube_comp_v7')) || {
+    let state = JSON.parse(localStorage.getItem('cube_comp_v8')) || {
         format: 'ao5',
         solves: []
     };
@@ -144,46 +142,63 @@
         return seconds.toFixed(2);
     }
 
-    function render() {
+    // This function only runs when the page loads or format changes
+    function buildUI() {
         syncArraySize();
         const list = document.getElementById('solveList');
         list.innerHTML = '';
         
-        const currentTimes = state.solves.map((s, idx) => ({ val: getVal(s), index: idx }));
-        const filled = currentTimes.filter(t => t.val !== null);
-        
-        let bestIdx = -1, worstIdx = -1;
-
-        // ONLY calculate strikes if format is Ao5 and it's full
-        if (state.format === 'ao5' && filled.length === 5) {
-            const sorted = [...filled].sort((a, b) => a.val - b.val);
-            bestIdx = sorted[0].index;
-            worstIdx = sorted[4].index;
-        }
-
         state.solves.forEach((solve, i) => {
-            const isStrike = (i === bestIdx || i === worstIdx);
             const div = document.createElement('div');
-            div.className = `solve-row ${isStrike ? 'strike' : ''}`;
+            div.className = `solve-row`;
+            div.id = `row-${i}`;
             div.innerHTML = `
-                <input type="text" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
-                <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
-                <button class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
+                <input type="text" id="input-${i}" placeholder="Solve ${i+1}" value="${solve.raw}" 
+                    oninput="updateTime(${i}, this.value)" 
+                    onkeydown="handleKey(${i}, event)">
+                <button id="p2-${i}" class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
+                <button id="dnf-${i}" class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
             `;
             list.appendChild(div);
         });
-
         document.getElementById('format').value = state.format;
         calculate();
-        localStorage.setItem('cube_comp_v7', JSON.stringify(state));
     }
 
-    function updateTime(i, val) { state.solves[i].raw = val; calculate(); localStorage.setItem('cube_comp_v7', JSON.stringify(state)); render(); }
-    function togglePlus(i) { state.solves[i].plusTwo = !state.solves[i].plusTwo; if(state.solves[i].plusTwo) state.solves[i].dnf = false; render(); }
-    function toggleDNF(i) { state.solves[i].dnf = !state.solves[i].dnf; if(state.solves[i].dnf) state.solves[i].plusTwo = false; render(); }
-    
-    function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; render(); }
-    function resetAll() { if(confirm("Reset current session?")) { state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false })); render(); } }
+    function handleKey(i, e) {
+        if (e.key === 'Enter') {
+            const next = document.getElementById(`input-${i+1}`);
+            if (next) next.focus();
+        }
+    }
+
+    function updateTime(i, val) { 
+        state.solves[i].raw = val; 
+        calculate(); 
+        localStorage.setItem('cube_comp_v8', JSON.stringify(state)); 
+    }
+
+    function togglePlus(i) { 
+        state.solves[i].plusTwo = !state.solves[i].plusTwo; 
+        if(state.solves[i].plusTwo) state.solves[i].dnf = false; 
+        updateButtons(i);
+        calculate();
+    }
+
+    function toggleDNF(i) { 
+        state.solves[i].dnf = !state.solves[i].dnf; 
+        if(state.solves[i].dnf) state.solves[i].plusTwo = false; 
+        updateButtons(i);
+        calculate();
+    }
+
+    function updateButtons(i) {
+        const p2Btn = document.getElementById(`p2-${i}`);
+        const dnfBtn = document.getElementById(`dnf-${i}`);
+        p2Btn.className = `btn-p ${state.solves[i].plusTwo ? 'active-plus' : ''}`;
+        dnfBtn.className = `btn-p ${state.solves[i].dnf ? 'active-dnf' : ''}`;
+        localStorage.setItem('cube_comp_v8', JSON.stringify(state)); 
+    }
 
     function getVal(solve) {
         if (solve.dnf) return Infinity;
@@ -197,9 +212,10 @@
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
 
-        const res = (filled.length === count) ? formatTime(runMath(filled)) : "--";
-        document.getElementById('curAvg').innerText = res;
+        // Current Result
+        document.getElementById('curAvg').innerText = (filled.length === count) ? formatTime(runMath(filled)) : "--";
 
+        // BPA / WPA
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
@@ -208,6 +224,21 @@
         } else {
             document.getElementById('bestAvg').innerText = "Final";
             document.getElementById('worstAvg').innerText = "Final";
+        }
+
+        // Handle Strikes WITHOUT rebuilding UI
+        const indexedTimes = times.map((t, idx) => ({ val: t, index: idx }));
+        const validForStrikes = indexedTimes.filter(t => t.val !== null);
+
+        // Reset all strikes first
+        for(let j=0; j<state.solves.length; j++) {
+            document.getElementById(`row-${j}`).classList.remove('strike');
+        }
+
+        if (state.format === 'ao5' && validForStrikes.length === 5) {
+            const sorted = [...validForStrikes].sort((a, b) => a.val - b.val);
+            document.getElementById(`row-${sorted[0].index}`).classList.add('strike');
+            document.getElementById(`row-${sorted[4].index}`).classList.add('strike');
         }
     }
 
@@ -220,6 +251,19 @@
         return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
     }
 
+    function changeFormat() { 
+        state.format = document.getElementById('format').value; 
+        state.solves = []; 
+        buildUI(); 
+    }
+
+    function resetAll() { 
+        if(confirm("Clear session?")) { 
+            state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false })); 
+            buildUI(); 
+        } 
+    }
+
     function copyToClipboard() {
         const timesStr = state.solves.map((s) => {
             let time = s.dnf ? "DNF" : (s.raw || "0.00");
@@ -228,10 +272,10 @@
         }).join(", ");
         const avg = document.getElementById('curAvg').innerText;
         const text = `Comp Avg [${state.format.toUpperCase()}]: ${timesStr} | Result: ${avg}`;
-        navigator.clipboard.writeText(text).then(() => alert("Results copied!"));
+        navigator.clipboard.writeText(text).then(() => alert("Copied!"));
     }
 
-    render();
+    buildUI();
 </script>
 </body>
 </html>
