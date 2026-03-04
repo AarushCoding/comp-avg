@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comp Avg</title>
+    <title>Comp Avg - Pro Emerald</title>
     <style>
         :root {
             --green: #00ff88;
@@ -28,81 +28,67 @@
             border-radius: 28px; padding: 2rem;
             width: 100%; max-width: 440px;
             box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
-            position: relative;
         }
 
-        /* Trinity Header */
         .trinity-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 2rem;
+            gap: 10px; margin-bottom: 2rem;
         }
 
-        .header-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .header-label {
-            font-size: 0.65rem;
-            color: var(--green);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .header-item { display: flex; flex-direction: column; gap: 5px; }
+        .header-label { font-size: 0.65rem; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
 
         select, .wca-input {
             background: rgba(0, 255, 136, 0.08);
             border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            color: white;
-            padding: 8px;
-            font-size: 0.8rem;
-            outline: none;
+            border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none;
         }
 
-        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        /* Solve Row Styling */
+        .solve-row { 
+            display: flex; gap: 10px; margin-bottom: 12px; align-items: center; 
+            position: relative; 
+        }
         
+        .input-container { position: relative; flex-grow: 1; display: flex; align-items: center; }
+
         input.time-input {
-            flex-grow: 1; background: rgba(0, 255, 136, 0.05); border: 1px solid var(--glass-border);
-            border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; outline: none; font-size: 1rem;
+            width: 100%; background: rgba(0, 255, 136, 0.05); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; 
+            outline: none; font-size: 1rem; box-sizing: border-box;
         }
         
-        .strike input {
-            color: #2e845c;
-            text-decoration: line-through;
-            text-decoration-color: rgba(0, 255, 136, 0.5);
-            text-decoration-thickness: 2px;
+        /* PR Symbol inside Input */
+        .single-pr-symbol {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: var(--green); color: black; font-size: 0.6rem; font-weight: 900;
+            padding: 2px 4px; border-radius: 4px; display: none; pointer-events: none;
         }
+
+        .strike input { color: #2e845c; text-decoration: line-through; opacity: 0.6; }
 
         .btn-p {
             padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border);
-            background: rgba(0, 255, 136, 0.02); color: #4b8c6d; cursor: pointer; font-weight: bold; font-size: 0.7rem; transition: 0.2s;
+            background: rgba(0, 255, 136, 0.02); color: #4b8c6d; cursor: pointer; font-weight: bold; font-size: 0.7rem;
         }
         .btn-p.active-plus { border-color: var(--green); color: var(--green); background: rgba(0, 255, 136, 0.15); }
         .btn-p.active-dnf { border-color: #ff4444; color: #ff4444; background: rgba(255, 68, 68, 0.1); }
 
+        /* Stats Card */
         .stats {
             background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
             border-radius: 20px; padding: 1.5rem;
-            border: 1px solid var(--glass-border); margin-top: 1.5rem;
-            position: relative;
-            transition: 0.5s;
+            border: 1px solid var(--glass-border); margin-top: 1.5rem; position: relative;
         }
 
-        .pr-badge {
+        .avg-pr-badge {
             position: absolute; top: 15px; right: 15px;
-            background: var(--green); color: black;
-            font-size: 0.65rem; font-weight: 900;
-            padding: 2px 6px; border-radius: 4px;
-            display: none; /* Shown via JS */
+            background: var(--green); color: black; font-size: 0.65rem; font-weight: 900;
+            padding: 2px 6px; border-radius: 4px; display: none;
         }
 
-        .pr-glow {
-            box-shadow: 0 0 30px var(--green);
-            border-color: var(--green-bright);
-        }
+        .pr-glow { box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); border-color: var(--green-bright); }
 
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--green-bright); }
@@ -111,9 +97,8 @@
         .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .btn-reset, .btn-copy {
             background: transparent; border: 1px solid var(--glass-border);
-            color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+            color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer;
         }
-        .btn-reset:hover, .btn-copy:hover { background: rgba(0, 255, 136, 0.1); }
     </style>
 </head>
 <body>
@@ -133,33 +118,28 @@
         </div>
         <div class="header-item">
             <span class="header-label">Event</span>
-            
             <select id="event" onchange="fetchPR()">
                 <optgroup label="NxN">
-                    <option value="333">3x3x3 Cube</option>
-                    <option value="222">2x2x2 Cube</option>
-                    <option value="444">4x4x4 Cube</option>
-                    <option value="555">5x5x5 Cube</option>
-                    <option value="666">6x6x6 Cube</option>
-                    <option value="777">777x777 Cube</option>
+                    <option value="333">3x3</option>
+                    <option value="222">2x2</option>
+                    <option value="444">4x4</option>
+                    <option value="555">5x5</option>
+                    <option value="666">6x6</option>
+                    <option value="777">777</option>
                 </optgroup>
-            
-                <optgroup label="Sides">
-                    <option value="333oh">3x3x3 One-Handed</option>
-                    <option value="333fm">3x3x3 Fewest Moves</option>
+                <optgroup label="Side Events">
+                    <option value="333oh">OH</option>
                     <option value="clock">Clock</option>
-                    <option value="minx">Megaminx</option>
-                    <option value="pyram">Pyraminx</option>
+                    <option value="minx">Mega</option>
+                    <option value="pyram">Pyra</option>
                     <option value="skewb">Skewb</option>
-                    <option value="sq1">Square-1</option>
+                    <option value="sq1">Sq-1</option>
                 </optgroup>
-            
                 <optgroup label="Blindfolded">
-                    <option value="333bf">3x3x3 Blindfolded</option>
-                    <option value="444bf">4x4x4 Blindfolded</option>
-                    <option value="555bf">5x5x5 Blindfolded</option>
+                    <option value="333bf">3BLD</option>
+                    <option value="444bf">4BLD</option>
+                    <option value="555bf">5BLD</option>
                 </optgroup>
-            
             </select>
         </div>
     </div>
@@ -167,23 +147,10 @@
     <div id="solveList"></div>
 
     <div class="stats" id="statsCard">
-        <div class="pr-badge" id="prBadge">PR</div>
-        <div class="stat-line">
-            <span class="label">Result</span>
-            <span class="val" id="curAvg">--</span>
-        </div>
-        <div class="stat-line">
-            <span class="label">BPA</span>
-            <span class="val" id="bestAvg">--</span>
-        </div>
-        <div class="stat-line">
-            <span class="label">WPA</span>
-            <span class="val" id="worstAvg">--</span>
-        </div>
-        <div id="targetLine" class="stat-line" style="border-top: 1px solid var(--glass-border); padding-top: 10px; margin-top: 5px; display:none;">
-            <span class="label">Target for PR</span>
-            <span class="val" id="targetVal" style="font-size: 1rem;">--</span>
-        </div>
+        <div class="avg-pr-badge" id="avgPrBadge">AVG PR</div>
+        <div class="stat-line"><span class="label">Result</span><span class="val" id="curAvg">--</span></div>
+        <div class="stat-line"><span class="label">BPA</span><span class="val" id="bestAvg">--</span></div>
+        <div class="stat-line"><span class="label">WPA</span><span class="val" id="worstAvg">--</span></div>
     </div>
 
     <div class="action-footer">
@@ -194,16 +161,12 @@
 
 <script>
     let officialPR = { single: Infinity, average: Infinity };
-    let state = JSON.parse(localStorage.getItem('cube_comp_v9')) || {
-        format: 'ao5',
-        solves: []
-    };
+    let state = JSON.parse(localStorage.getItem('cube_comp_v10')) || { format: 'ao5', solves: [] };
 
     async function fetchPR() {
-        const id = document.getElementById('wcaId').value.trim();
+        const id = document.getElementById('wcaId').value.trim().toUpperCase();
         const ev = document.getElementById('event').value;
         if (id.length < 4) return;
-
         try {
             const res = await fetch(`https://www.worldcubeassociation.org/api/v0/users/${id}`);
             const data = await res.json();
@@ -213,7 +176,7 @@
                 officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
                 calculate();
             }
-        } catch (e) { console.log("WCA ID not found"); }
+        } catch (e) { console.error("WCA ID fetch failed"); }
     }
 
     function syncArraySize() {
@@ -232,12 +195,6 @@
         return parseFloat(str);
     }
 
-    function formatTime(s) {
-        if (s === Infinity) return "DNF";
-        if (s === null || isNaN(s)) return "--";
-        return s >= 60 ? `${Math.floor(s/60)}:${(s%60).toFixed(2).padStart(5,'0')}` : s.toFixed(2);
-    }
-
     function buildUI() {
         syncArraySize();
         const list = document.getElementById('solveList');
@@ -247,7 +204,10 @@
             div.className = `solve-row`;
             div.id = `row-${i}`;
             div.innerHTML = `
-                <input type="text" class="time-input" id="input-${i}" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
+                <div class="input-container">
+                    <input type="text" class="time-input" id="input-${i}" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
+                    <div class="single-pr-symbol" id="pr-single-${i}">PR</div>
+                </div>
                 <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
                 <button class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
             `;
@@ -259,43 +219,43 @@
     function updateTime(i, v) { state.solves[i].raw = v; calculate(); save(); }
     function togglePlus(i) { state.solves[i].plusTwo = !state.solves[i].plusTwo; if(state.solves[i].plusTwo) state.solves[i].dnf = false; buildUI(); }
     function toggleDNF(i) { state.solves[i].dnf = !state.solves[i].dnf; if(state.solves[i].dnf) state.solves[i].plusTwo = false; buildUI(); }
-    function save() { localStorage.setItem('cube_comp_v9', JSON.stringify(state)); }
-
-    function getVal(solve) {
-        if (solve.dnf) return Infinity;
-        let n = parseToSeconds(solve.raw);
-        return (n === null) ? null : (solve.plusTwo ? n + 2 : n);
-    }
+    function save() { localStorage.setItem('cube_comp_v10', JSON.stringify(state)); }
 
     function calculate() {
-        const times = state.solves.map(getVal);
+        const times = state.solves.map(s => {
+            if (s.dnf) return Infinity;
+            let n = parseToSeconds(s.raw);
+            return (n === null) ? null : (s.plusTwo ? n + 2 : n);
+        });
+
+        // 1. Check Single PRs (Inside the boxes)
+        times.forEach((t, i) => {
+            const badge = document.getElementById(`pr-single-${i}`);
+            if (badge) {
+                badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
+            }
+        });
+
+        // 2. Calculate Average Result
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
-        
         const curAvg = (filled.length === count) ? runMath(filled) : null;
         document.getElementById('curAvg').innerText = formatTime(curAvg);
 
-        // PR System Logic
-        const isPR = (curAvg && curAvg < officialPR.average) || filled.some(t => t < officialPR.single);
-        document.getElementById('prBadge').style.display = isPR ? 'block' : 'none';
-        document.getElementById('statsCard').classList.toggle('pr-glow', isPR);
+        // 3. Check Average PR (Stats card glow)
+        const isAvgPR = (curAvg && curAvg < officialPR.average);
+        document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
+        document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
-        // BPA/WPA Logic
+        // BPA/WPA
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
             let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
             document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
-        }
-
-        // Target for PR (Ao5 only)
-        if (state.format === 'ao5' && filled.length === 4 && officialPR.average !== Infinity) {
-            document.getElementById('targetLine').style.display = 'flex';
-            let sorted = [...filled].sort((a,b)=>a-b);
-            let needed = (officialPR.average * 3) - (sorted[1] + sorted[2]); // Simplified target math
-            document.getElementById('targetVal').innerText = needed > 0 ? `< ${needed.toFixed(2)}` : "Impossible";
         } else {
-            document.getElementById('targetLine').style.display = 'none';
+            document.getElementById('bestAvg').innerText = "Final";
+            document.getElementById('worstAvg').innerText = "Final";
         }
 
         // Strikes
@@ -307,22 +267,24 @@
         }
     }
 
+    function formatTime(s) {
+        if (s === Infinity) return "DNF";
+        if (s === null || isNaN(s)) return "--";
+        return s >= 60 ? `${Math.floor(s/60)}:${(s%60).toFixed(2).padStart(5,'0')}` : s.toFixed(2);
+    }
+
     function runMath(t) {
         const dnfs = t.filter(x => x === Infinity).length;
         if (state.format === 'mo3') return dnfs > 0 ? Infinity : (t.reduce((a,b)=>a+b,0)/3);
         if (dnfs >= 2) return Infinity;
         let s = [...t].sort((a,b)=>a-b);
-        s.shift(); s.pop();
+        if (state.format === 'ao5') { s.shift(); s.pop(); }
         return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
     }
 
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
     function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
-    
-    function copyToClipboard() {
-        const avg = document.getElementById('curAvg').innerText;
-        navigator.clipboard.writeText(`Comp Result: ${avg}`).then(() => alert("Copied!"));
-    }
+    function copyToClipboard() { navigator.clipboard.writeText(`Result: ${document.getElementById('curAvg').innerText}`).then(() => alert("Copied!")); }
 
     buildUI();
 </script>
