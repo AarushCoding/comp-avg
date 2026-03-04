@@ -191,7 +191,7 @@
 
     function handleEventChange() {
         const ev = document.getElementById('event').value;
-        state.format = ['666', '777', '333bf', '444bf', '555bf'].includes(ev) ? 'mo3' : 'ao5';
+        state.format = ['666', '777', '444bf', '555bf'].includes(ev) ? 'mo3' : 'ao5';
         document.getElementById('format').value = state.format;
         state.solves = [];
         buildUI();
