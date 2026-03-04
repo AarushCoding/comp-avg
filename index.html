@@ -8,7 +8,6 @@
         :root {
             --green: #00ff88;
             --green-bright: #52ffab;
-            --gold: #ffcc00;
             --glass-border: rgba(0, 255, 136, 0.2);
             --bg: #000a06;
         }
@@ -36,12 +35,12 @@
         }
 
         .header-item { display: flex; flex-direction: column; gap: 5px; }
-        .header-label { font-size: 0.65rem; color: var(--green); text-transform: uppercase; }
+        .header-label { font-size: 0.65rem; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
 
         select, .wca-input {
             background: rgba(0, 255, 136, 0.08);
             border: 1px solid var(--glass-border);
-            border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none;
+            border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none; width: 100%;
         }
 
         .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
@@ -55,14 +54,13 @@
         .single-pr-symbol {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: var(--green); color: black; font-size: 0.6rem; font-weight: 900;
-            padding: 2px 4px; border-radius: 4px; display: none;
+            padding: 2px 4px; border-radius: 4px; display: none; pointer-events: none;
         }
 
         .stats {
             background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
             border-radius: 20px; padding: 1.5rem;
             border: 1px solid var(--glass-border); margin-top: 1.5rem; position: relative;
-            transition: 0.3s ease;
         }
 
         .avg-pr-badge {
@@ -71,27 +69,22 @@
             padding: 2px 6px; border-radius: 4px; display: none;
         }
 
-        /* Status Glows */
         .pr-glow { box-shadow: 0 0 35px rgba(0, 255, 136, 0.4); border-color: var(--green-bright); }
-        .nr-glow { box-shadow: 0 0 45px rgba(255, 204, 0, 0.5); border-color: var(--gold); }
-        .nr-glow .val { color: var(--gold) !important; }
 
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--green-bright); }
         .label { font-size: 0.85rem; color: #65b08d; }
 
-        /* Action Buttons */
-        .action-footer { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+        .action-footer { display: flex; gap: 10px; margin-top: 20px; }
         .btn-action {
             background: transparent; border: 1px solid var(--glass-border);
-            color: var(--green); padding: 10px 20px; border-radius: 12px; 
+            color: var(--green); padding: 12px; border-radius: 12px; 
             cursor: pointer; font-size: 0.8rem; font-weight: bold; flex: 1;
         }
-        .btn-action:hover { background: rgba(0, 255, 136, 0.1); }
 
         .btn-p { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: #4b8c6d; cursor: pointer; }
-        .active-plus { border-color: var(--green); color: var(--green); }
-        .active-dnf { border-color: #ff4444; color: #ff4444; }
+        .active-plus { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
+        .active-dnf { border-color: #ff4444; color: #ff4444; background: rgba(255,68,68,0.1); }
         .strike input { color: #2e845c; text-decoration: line-through; opacity: 0.5; }
     </style>
 </head>
@@ -108,37 +101,34 @@
         </div>
         <div class="header-item">
             <span class="header-label">WCA ID</span>
-            <input type="text" id="wcaId" class="wca-input" placeholder="2022..." oninput="fetchPR()">
+            <input type="text" id="wcaId" class="wca-input" placeholder="2022NAIK01" oninput="fetchPR()">
         </div>
         <div class="header-item">
             <span class="header-label">Event</span>
             <select id="event" onchange="handleEventChange()">
                 <optgroup label="NxN">
-                    <option value="222">2x2x2 Cube</option>
-                    <option value="333">3x3x3 Cube</option>
-                    <option value="444">4x4x4 Cube</option>
-                    <option value="555">5x5x5 Cube</option>
-                    <option value="666">6x6x6 Cube</option>
-                    <option value="777">7x7x7 Cube</option>
+                    <option value="333">3x3x3</option>
+                    <option value="222">2x2x2</option>
+                    <option value="444">4x4x4</option>
+                    <option value="555">5x5x5</option>
+                    <option value="666">6x6x6</option>
+                    <option value="777">7x7x7</option>
                 </optgroup>
-            
                 <optgroup label="Sides">
-                    <option value="333oh">3x3x3 One-Handed</option>
+                    <option value="333oh">3x3 OH</option>
                     <option value="clock">Clock</option>
                     <option value="minx">Megaminx</option>
                     <option value="pyram">Pyraminx</option>
                     <option value="skewb">Skewb</option>
                     <option value="sq1">Square-1</option>
                 </optgroup>
-            
                 <optgroup label="Blindfolded">
-                    <option value="333bf">3x3x3 Blindfolded</option>
-                    <option value="444bf">4x4x4 Blindfolded</option>
-                    <option value="555bf">5x5x5 Blindfolded</option>
+                    <option value="333bf">3x3 BLD</option>
+                    <option value="444bf">4x4 BLD</option>
+                    <option value="555bf">5x5 BLD</option>
                 </optgroup>
-            
                 <optgroup label="Challenges">
-                    <option value="333fm">3x3x3 Fewest Moves</option>
+                    <option value="333fm">3x3 FMC</option>
                 </optgroup>
             </select>
         </div>
@@ -150,7 +140,6 @@
         <div class="avg-pr-badge" id="avgPrBadge">AVG PR</div>
         <div class="stat-line"><span class="label">Result</span><span class="val" id="curAvg">--</span></div>
         <div class="stat-line"><span class="label">BPA</span><span class="val" id="bestAvg">--</span></div>
-        <div class="stat-line"><span class="label">WPA</span><span class="val" id="worstAvg">--</span></div>
     </div>
 
     <div class="action-footer">
@@ -160,11 +149,31 @@
 </div>
 
 <script>
-    // Current UK National Record Averages (Approx for 2026)
-    const ukRecords = { "333": 5.80, "222": 1.20, "444": 22.50, "333oh": 9.50, "clock": 3.40, "pyram": 1.80 };
-    
     let officialPR = { single: Infinity, average: Infinity };
     let state = { format: 'ao5', solves: [] };
+
+    // --- MINUTES PARSING LOGIC ---
+    function parseToSeconds(str) {
+        if (!str || str.trim() === "") return null;
+        if (str.includes(':')) {
+            const parts = str.split(':');
+            const mins = parseFloat(parts[0]) || 0;
+            const secs = parseFloat(parts[1]) || 0;
+            return (mins * 60) + secs;
+        }
+        return parseFloat(str);
+    }
+
+    function formatTime(s) {
+        if (s === Infinity) return "DNF";
+        if (s === null || isNaN(s)) return "--";
+        if (s >= 60) {
+            const mins = Math.floor(s / 60);
+            const secs = (s % 60).toFixed(2);
+            return `${mins}:${secs.padStart(5, '0')}`;
+        }
+        return s.toFixed(2);
+    }
 
     async function fetchPR() {
         const id = document.getElementById('wcaId').value.trim().toUpperCase();
@@ -181,6 +190,16 @@
                 calculate();
             }
         } catch (e) { console.error("API error"); }
+    }
+
+    function handleEventChange() {
+        const ev = document.getElementById('event').value;
+        const mo3Events = ['666', '777', '333bf', '444bf', '555bf', '333fm'];
+        state.format = mo3Events.includes(ev) ? 'mo3' : 'ao5';
+        document.getElementById('format').value = state.format;
+        state.solves = [];
+        buildUI();
+        fetchPR();
     }
 
     function syncArraySize() {
@@ -218,12 +237,10 @@
     function calculate() {
         const times = state.solves.map(s => {
             if (s.dnf) return Infinity;
-            if (!s.raw || s.raw.trim() === "") return null;
-            let n = parseFloat(s.raw);
-            return isNaN(n) ? null : (s.plusTwo ? n + 2 : n);
+            let n = parseToSeconds(s.raw);
+            return (n === null) ? null : (s.plusTwo ? n + 2 : n);
         });
 
-        // Single PR Badges
         times.forEach((t, i) => {
             const badge = document.getElementById(`pr-single-${i}`);
             if (badge) badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
@@ -233,33 +250,20 @@
         const count = state.format === 'ao5' ? 5 : 3;
         const curAvg = (filled.length === count) ? runMath(filled) : null;
         
-        document.getElementById('curAvg').innerText = curAvg ? curAvg.toFixed(2) : "--";
+        document.getElementById('curAvg').innerText = formatTime(curAvg);
 
-        // Logic for PR and NR glows
         const isAvgPR = (curAvg && curAvg < officialPR.average);
-        const isNR = (curAvg && curAvg < (ukRecords[document.getElementById('event').value] || 0));
-        
-        const card = document.getElementById('statsCard');
-        const badge = document.getElementById('avgPrBadge');
+        document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
+        document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
-        badge.style.display = isAvgPR ? 'block' : 'none';
-        badge.innerText = isNR ? "UK RECORD" : "AVG PR";
-        
-        card.className = "stats";
-        if (isNR) card.classList.add('nr-glow');
-        else if (isAvgPR) card.classList.add('pr-glow');
-
-        updateBPA(filled, count);
-        handleStrikes(times, filled);
-    }
-
-    function updateBPA(filled, count) {
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
-            document.getElementById('bestAvg').innerText = runMath(bpaArr).toFixed(2);
+            document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
         } else {
             document.getElementById('bestAvg').innerText = "Final";
         }
+        
+        handleStrikes(times, filled);
     }
 
     function handleStrikes(times, filled) {
@@ -272,15 +276,18 @@
     }
 
     function runMath(t) {
-        let s = [...t].sort((a,b) => a - b);
+        const dnfs = t.filter(x => x === Infinity).length;
+        if (state.format === 'mo3') return dnfs > 0 ? Infinity : (t.reduce((a,b)=>a+b,0)/3);
+        if (dnfs >= 2) return Infinity;
+        let s = [...t].sort((a,b)=>a-b);
         if (state.format === 'ao5') { s.shift(); s.pop(); }
-        return s.reduce((a,b) => a+b, 0) / s.length;
+        return s.reduce((a,b)=>a+b, 0) / 3;
     }
 
-    function resetAll() { if(confirm("Clear times?")) { state.solves = []; buildUI(); } }
+    function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
     function copyResult() { 
-        const res = document.getElementById('curAvg').innerText;
-        navigator.clipboard.writeText(`Result: ${res}`).then(() => alert("Copied!"));
+        navigator.clipboard.writeText(document.getElementById('curAvg').innerText); 
+        alert("Copied!"); 
     }
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
 
