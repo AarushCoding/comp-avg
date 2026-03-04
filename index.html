@@ -44,29 +44,19 @@
         }
 
         .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
-        .input-container { position: relative; flex-grow: 1; display: flex; align-items: center; }
+        .input-container { position: relative; flex-grow: 1; }
 
         input.time-input {
             width: 100%; background: rgba(0, 255, 136, 0.05); border: 1px solid var(--glass-border);
-            border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; 
-            outline: none; font-size: 1rem;
+            border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; outline: none; font-size: 1rem; box-sizing: border-box;
         }
 
-        /* The PR Badge in the box */
+        /* PR Symbol styling */
         .single-pr-symbol {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: var(--green); color: black; font-size: 0.6rem; font-weight: 900;
-            padding: 2px 4px; border-radius: 4px; display: none; z-index: 10;
+            padding: 2px 4px; border-radius: 4px; display: none; pointer-events: none;
         }
-
-        .strike input { color: #2e845c; text-decoration: line-through; opacity: 0.5; }
-
-        .btn-p {
-            padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border);
-            background: rgba(0, 255, 136, 0.02); color: #4b8c6d; cursor: pointer; font-size: 0.7rem;
-        }
-        .btn-p.active-plus { border-color: var(--green); color: var(--green); }
-        .btn-p.active-dnf { border-color: #ff4444; color: #ff4444; }
 
         .stats {
             background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
@@ -86,8 +76,10 @@
         .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--green-bright); }
         .label { font-size: 0.85rem; color: #65b08d; }
 
-        .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
-        button { background: transparent; border: 1px solid var(--glass-border); color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer; }
+        .btn-p { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: #4b8c6d; cursor: pointer; }
+        .active-plus { border-color: var(--green); color: var(--green); }
+        .active-dnf { border-color: #ff4444; color: #ff4444; }
+        .strike input { color: #2e845c; text-decoration: line-through; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -103,7 +95,7 @@
         </div>
         <div class="header-item">
             <span class="header-label">WCA ID</span>
-            <input type="text" id="wcaId" class="wca-input" placeholder="2024..." oninput="fetchPR()">
+            <input type="text" id="wcaId" class="wca-input" placeholder="2022NAIK01" oninput="fetchPR()">
         </div>
         <div class="header-item">
             <span class="header-label">Event</span>
@@ -124,10 +116,8 @@
                     <option value="skewb">Skewb</option>
                     <option value="sq1">Sq-1</option>
                 </optgroup>
-                <optgroup label="Blindfolded">
+                <optgroup label="Blind">
                     <option value="333bf">3BLD</option>
-                    <option value="444bf">4BLD</option>
-                    <option value="555bf">5BLD</option>
                 </optgroup>
             </select>
         </div>
@@ -141,11 +131,6 @@
         <div class="stat-line"><span class="label">BPA</span><span class="val" id="bestAvg">--</span></div>
         <div class="stat-line"><span class="label">WPA</span><span class="val" id="worstAvg">--</span></div>
     </div>
-
-    <div class="action-footer">
-        <button onclick="copyToClipboard()">COPY</button>
-        <button onclick="resetAll()">RESET</button>
-    </div>
 </div>
 
 <script>
@@ -155,18 +140,22 @@
     async function fetchPR() {
         const id = document.getElementById('wcaId').value.trim().toUpperCase();
         const ev = document.getElementById('event').value;
-        if (id.length < 10) return; // Wait for full ID
+        if (id.length < 10) return;
 
         try {
-            const res = await fetch(`https://www.worldcubeassociation.org/api/v0/users/${id}`);
+            const res = await fetch(`https://www.worldcubeassociation.org/api/v0/persons/${id}`);
             const data = await res.json();
-            if (data.user && data.user.personal_records[ev]) {
-                const pr = data.user.personal_records[ev];
-                officialPR.single = pr.single.best / 100;
-                officialPR.average = pr.average ? pr.average.best / 100 : Infinity;
+            
+            // Correct mapping for the /persons/ endpoint
+            const prs = data.personal_records;
+            if (prs && prs[ev]) {
+                // Accessing single.best and average.best from your JSON structure
+                officialPR.single = prs[ev].single.best / 100;
+                officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
+                console.log(`PRs Loaded: Single ${officialPR.single}, Avg ${officialPR.average}`);
                 calculate();
             }
-        } catch (e) { console.error("API error"); }
+        } catch (e) { console.error("WCA fetch failed"); }
     }
 
     function syncArraySize() {
@@ -174,15 +163,6 @@
         if (state.solves.length !== count) {
             state.solves = Array.from({length: count}, () => ({ raw: '', plusTwo: false, dnf: false }));
         }
-    }
-
-    function parseToSeconds(str) {
-        if (!str || str.trim() === "") return null;
-        if (str.includes(':')) {
-            const parts = str.split(':');
-            return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
-        }
-        return parseFloat(str);
     }
 
     function buildUI() {
@@ -213,19 +193,17 @@
     function calculate() {
         const times = state.solves.map(s => {
             if (s.dnf) return Infinity;
-            let n = parseToSeconds(s.raw);
-            return (n === null) ? null : (s.plusTwo ? n + 2 : n);
+            if (!s.raw || s.raw.trim() === "") return null;
+            let n = parseFloat(s.raw);
+            return isNaN(n) ? null : (s.plusTwo ? n + 2 : n);
         });
 
-        // SINGLE PR LOGIC
+        // 1. Check Single PRs
         times.forEach((t, i) => {
             const badge = document.getElementById(`pr-single-${i}`);
             if (badge) {
-                if (t !== null && t < officialPR.single && officialPR.single !== Infinity) {
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
+                // Show if valid time and lower than official single
+                badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
             }
         });
 
@@ -233,37 +211,37 @@
         const count = state.format === 'ao5' ? 5 : 3;
         const curAvg = (filled.length === count) ? runMath(filled) : null;
         
-        document.getElementById('curAvg').innerText = formatTime(curAvg);
+        document.getElementById('curAvg').innerText = curAvg ? curAvg.toFixed(2) : "--";
 
-        // AVG PR LOGIC
-        const isAvgPR = (curAvg && curAvg < officialPR.average && officialPR.average !== Infinity);
+        // 2. Check Average PR
+        const isAvgPR = (curAvg && curAvg < officialPR.average);
         document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
         document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
+        
+        // 3. BPA/WPA & Strikes
+        updateBPAWPA(filled, count);
+        handleStrikes(times, filled);
+    }
 
-        // BPA/WPA
+    function updateBPAWPA(filled, count) {
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
-            document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
+            document.getElementById('bestAvg').innerText = runMath(bpaArr).toFixed(2);
             let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
-            document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
+            document.getElementById('worstAvg').innerText = runMath(wpaArr) === Infinity ? "DNF" : runMath(wpaArr).toFixed(2);
         } else {
             document.getElementById('bestAvg').innerText = "Final";
             document.getElementById('worstAvg').innerText = "Final";
         }
-
-        // Strikes
-        times.forEach((_, i) => document.getElementById(`row-${i}`).classList.remove('strike'));
-        if (state.format === 'ao5' && filled.length === 5) {
-            const sorted = times.map((v, i) => ({v, i})).sort((a,b) => a.v - b.v);
-            document.getElementById(`row-${sorted[0].i}`).classList.add('strike');
-            document.getElementById(`row-${sorted[4].i}`).classList.add('strike');
-        }
     }
 
-    function formatTime(s) {
-        if (s === Infinity) return "DNF";
-        if (s === null || isNaN(s)) return "--";
-        return s >= 60 ? `${Math.floor(s/60)}:${(s%60).toFixed(2).padStart(5,'0')}` : s.toFixed(2);
+    function handleStrikes(times, filled) {
+        state.solves.forEach((_, i) => document.getElementById(`row-${i}`).classList.remove('strike'));
+        if (state.format === 'ao5' && filled.length === 5) {
+            const indexed = times.map((v, i) => ({v, i})).sort((a,b) => a.v - b.v);
+            document.getElementById(`row-${indexed[0].i}`).classList.add('strike');
+            document.getElementById(`row-${indexed[4].i}`).classList.add('strike');
+        }
     }
 
     function runMath(t) {
@@ -272,13 +250,10 @@
         if (dnfs >= 2) return Infinity;
         let s = [...t].sort((a,b)=>a-b);
         if (state.format === 'ao5') { s.shift(); s.pop(); }
-        return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
+        return s.reduce((a,b)=>a+b,0)/3;
     }
 
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
-    function resetAll() { state.solves = []; buildUI(); }
-    function copyToClipboard() { navigator.clipboard.writeText(document.getElementById('curAvg').innerText); alert("Copied!"); }
-
     buildUI();
 </script>
 </body>
