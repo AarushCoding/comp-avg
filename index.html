@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comp Avg - Pro Emerald</title>
+    <title>Comp Avg</title>
     <style>
         :root {
             --green: #00ff88;
@@ -30,6 +30,7 @@
             box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
         }
 
+        /* Trinity Header */
         .trinity-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -45,12 +46,8 @@
             border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none;
         }
 
-        /* Solve Row Styling */
-        .solve-row { 
-            display: flex; gap: 10px; margin-bottom: 12px; align-items: center; 
-            position: relative; 
-        }
-        
+        /* Solve Rows */
+        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .input-container { position: relative; flex-grow: 1; display: flex; align-items: center; }
 
         input.time-input {
@@ -58,8 +55,7 @@
             border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; 
             outline: none; font-size: 1rem; box-sizing: border-box;
         }
-        
-        /* PR Symbol inside Input */
+
         .single-pr-symbol {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: var(--green); color: black; font-size: 0.6rem; font-weight: 900;
@@ -75,11 +71,12 @@
         .btn-p.active-plus { border-color: var(--green); color: var(--green); background: rgba(0, 255, 136, 0.15); }
         .btn-p.active-dnf { border-color: #ff4444; color: #ff4444; background: rgba(255, 68, 68, 0.1); }
 
-        /* Stats Card */
+        /* Stats Section */
         .stats {
             background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
             border-radius: 20px; padding: 1.5rem;
             border: 1px solid var(--glass-border); margin-top: 1.5rem; position: relative;
+            transition: 0.4s ease;
         }
 
         .avg-pr-badge {
@@ -88,7 +85,7 @@
             padding: 2px 6px; border-radius: 4px; display: none;
         }
 
-        .pr-glow { box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); border-color: var(--green-bright); }
+        .pr-glow { box-shadow: 0 0 35px rgba(0, 255, 136, 0.35); border-color: var(--green-bright); }
 
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--green-bright); }
@@ -97,8 +94,9 @@
         .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
         .btn-reset, .btn-copy {
             background: transparent; border: 1px solid var(--glass-border);
-            color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer;
+            color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer; transition: 0.2s;
         }
+        .btn-reset:hover { border-color: #ff4444; color: #ff4444; }
     </style>
 </head>
 <body>
@@ -120,25 +118,28 @@
             <span class="header-label">Event</span>
             <select id="event" onchange="fetchPR()">
                 <optgroup label="NxN">
-                    <option value="333">3x3</option>
-                    <option value="222">2x2</option>
-                    <option value="444">4x4</option>
-                    <option value="555">5x5</option>
-                    <option value="666">6x6</option>
-                    <option value="777">777</option>
+                    <option value="222">2x2x2 Cube</option>
+                    <option value="333">3x3x3 Cube</option>
+                    <option value="444">4x4x4 Cube</option>
+                    <option value="555">5x5x5 Cube</option>
+                    <option value="666">6x6x6 Cube</option>
+                    <option value="777">777x777 Cube</option>
                 </optgroup>
-                <optgroup label="Side Events">
-                    <option value="333oh">OH</option>
+            
+                <optgroup label="Sides">
+                    <option value="333oh">3x3x3 One-Handed</option>
+                    <option value="333fm">3x3x3 Fewest Moves</option>
                     <option value="clock">Clock</option>
-                    <option value="minx">Mega</option>
-                    <option value="pyram">Pyra</option>
+                    <option value="minx">Megaminx</option>
+                    <option value="pyram">Pyraminx</option>
                     <option value="skewb">Skewb</option>
-                    <option value="sq1">Sq-1</option>
+                    <option value="sq1">Square-1</option>
                 </optgroup>
+            
                 <optgroup label="Blindfolded">
-                    <option value="333bf">3BLD</option>
-                    <option value="444bf">4BLD</option>
-                    <option value="555bf">5BLD</option>
+                    <option value="333bf">3x3x3 Blindfolded</option>
+                    <option value="444bf">4x4x4 Blindfolded</option>
+                    <option value="555bf">5x5x5 Blindfolded</option>
                 </optgroup>
             </select>
         </div>
@@ -161,22 +162,26 @@
 
 <script>
     let officialPR = { single: Infinity, average: Infinity };
-    let state = JSON.parse(localStorage.getItem('cube_comp_v10')) || { format: 'ao5', solves: [] };
+    let state = JSON.parse(localStorage.getItem('cube_comp_v11')) || { format: 'ao5', solves: [] };
 
     async function fetchPR() {
         const id = document.getElementById('wcaId').value.trim().toUpperCase();
         const ev = document.getElementById('event').value;
-        if (id.length < 4) return;
+        
+        officialPR = { single: Infinity, average: Infinity }; // Reset
+
+        if (id.length < 4) { calculate(); return; }
+
         try {
             const res = await fetch(`https://www.worldcubeassociation.org/api/v0/users/${id}`);
             const data = await res.json();
             const prs = data.user.personal_records;
-            if (prs[ev]) {
+            if (prs && prs[ev]) {
                 officialPR.single = prs[ev].single.best / 100;
                 officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
-                calculate();
             }
-        } catch (e) { console.error("WCA ID fetch failed"); }
+            calculate();
+        } catch (e) { calculate(); }
     }
 
     function syncArraySize() {
@@ -219,31 +224,31 @@
     function updateTime(i, v) { state.solves[i].raw = v; calculate(); save(); }
     function togglePlus(i) { state.solves[i].plusTwo = !state.solves[i].plusTwo; if(state.solves[i].plusTwo) state.solves[i].dnf = false; buildUI(); }
     function toggleDNF(i) { state.solves[i].dnf = !state.solves[i].dnf; if(state.solves[i].dnf) state.solves[i].plusTwo = false; buildUI(); }
-    function save() { localStorage.setItem('cube_comp_v10', JSON.stringify(state)); }
+    function save() { localStorage.setItem('cube_comp_v11', JSON.stringify(state)); }
 
     function calculate() {
         const times = state.solves.map(s => {
             if (s.dnf) return Infinity;
             let n = parseToSeconds(s.raw);
-            return (n === null) ? null : (s.plusTwo ? n + 2 : n);
+            return (n === null || isNaN(n) || n <= 0) ? null : (s.plusTwo ? n + 2 : n);
         });
 
-        // 1. Check Single PRs (Inside the boxes)
+        // Single PR Logic
         times.forEach((t, i) => {
             const badge = document.getElementById(`pr-single-${i}`);
             if (badge) {
-                badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
+                const isPR = (t !== null && t !== Infinity && t < officialPR.single && officialPR.single !== Infinity);
+                badge.style.display = isPR ? 'block' : 'none';
             }
         });
 
-        // 2. Calculate Average Result
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
         const curAvg = (filled.length === count) ? runMath(filled) : null;
         document.getElementById('curAvg').innerText = formatTime(curAvg);
 
-        // 3. Check Average PR (Stats card glow)
-        const isAvgPR = (curAvg && curAvg < officialPR.average);
+        // Average PR Logic
+        const isAvgPR = (curAvg && curAvg !== Infinity && curAvg < officialPR.average && officialPR.average !== Infinity);
         document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
         document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
@@ -283,8 +288,11 @@
     }
 
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
-    function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
-    function copyToClipboard() { navigator.clipboard.writeText(`Result: ${document.getElementById('curAvg').innerText}`).then(() => alert("Copied!")); }
+    function resetAll() { if(confirm("Clear session?")) { state.solves = []; buildUI(); } }
+    function copyToClipboard() {
+        const res = document.getElementById('curAvg').innerText;
+        navigator.clipboard.writeText(`Comp Result: ${res}`).then(() => alert("Copied!"));
+    }
 
     buildUI();
 </script>
