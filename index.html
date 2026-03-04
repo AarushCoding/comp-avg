@@ -248,15 +248,23 @@
         document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
         document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
-        // BPA & WPA
-        if (filled.length < count) {
+    
+        // BPA & WPA (Show only when 1 solve remains)
+        const remainsOne = (state.format === 'ao5' && filled.length === 4) || 
+                           (state.format === 'mo3' && filled.length === 2);
+
+        if (remainsOne) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
+            
             let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
             document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
-        } else {
+        } else if (filled.length === count) {
             document.getElementById('bestAvg').innerText = "Final";
             document.getElementById('worstAvg').innerText = "Final";
+        } else {
+            document.getElementById('bestAvg').innerText = "---";
+            document.getElementById('worstAvg').innerText = "---";
         }
         
         handleStrikes(times, filled);
