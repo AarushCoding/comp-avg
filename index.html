@@ -6,90 +6,170 @@
     <title>Comp Avg</title>
     <style>
         :root {
-            --orange: #ff8c00;
-            --orange-bright: #ffae42;
-            --glass: rgba(255, 140, 0, 0.05);
-            --glass-border: rgba(255, 140, 0, 0.2);
-            --bg: #0a0600;
+            --green: #00ff88;
+            --green-bright: #52ffab;
+            --glass: rgba(0, 255, 136, 0.05);
+            --glass-border: rgba(0, 255, 136, 0.2);
+            --bg: #000a06;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at center, #1a0f00, var(--bg));
-            color: #ffead0;
+            background: radial-gradient(circle at center, #001a0f, var(--bg));
+            color: #d0ffea;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; margin: 0; padding: 20px;
         }
 
         .glass-card {
-            background: rgba(15, 10, 0, 0.8);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: rgba(0, 10, 5, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
             border-radius: 28px; padding: 2rem;
-            width: 100%; max-width: 420px;
-            box-shadow: 0 0 40px rgba(255, 140, 0, 0.15);
+            width: 100%; max-width: 440px;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
+            position: relative;
         }
 
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        h2 { margin: 0; font-size: 1.1rem; letter-spacing: 3px; color: var(--orange); text-transform: uppercase; }
-
-        .btn-reset, .btn-copy {
-            background: transparent; border: 1px solid var(--glass-border);
-            color: var(--orange); padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; transition: 0.3s;
+        /* Trinity Header */
+        .trinity-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 2rem;
         }
-        .btn-reset:hover, .btn-copy:hover { background: rgba(255, 140, 0, 0.1); border-color: var(--orange-bright); }
 
-        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; position: relative; }
+        .header-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .header-label {
+            font-size: 0.65rem;
+            color: var(--green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select, .wca-input {
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            padding: 8px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+
+        .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         
-        input {
-            flex-grow: 1; background: rgba(255, 140, 0, 0.05); border: 1px solid var(--glass-border);
+        input.time-input {
+            flex-grow: 1; background: rgba(0, 255, 136, 0.05); border: 1px solid var(--glass-border);
             border-radius: 12px; padding: 12px; color: white; font-family: 'Courier New', monospace; outline: none; font-size: 1rem;
         }
         
-        /* Smooth strike-through */
         .strike input {
-            color: #845c2e;
+            color: #2e845c;
             text-decoration: line-through;
-            text-decoration-color: rgba(255, 140, 0, 0.6);
+            text-decoration-color: rgba(0, 255, 136, 0.5);
             text-decoration-thickness: 2px;
         }
 
         .btn-p {
             padding: 10px 14px; border-radius: 10px; border: 1px solid var(--glass-border);
-            background: rgba(255, 140, 0, 0.02); color: #845c2e; cursor: pointer; font-weight: bold; font-size: 0.7rem; transition: 0.2s;
+            background: rgba(0, 255, 136, 0.02); color: #4b8c6d; cursor: pointer; font-weight: bold; font-size: 0.7rem; transition: 0.2s;
         }
-        .btn-p.active-plus { border-color: var(--orange); color: var(--orange); background: rgba(255, 140, 0, 0.15); }
+        .btn-p.active-plus { border-color: var(--green); color: var(--green); background: rgba(0, 255, 136, 0.15); }
         .btn-p.active-dnf { border-color: #ff4444; color: #ff4444; background: rgba(255, 68, 68, 0.1); }
 
         .stats {
-            background: linear-gradient(145deg, rgba(255, 140, 0, 0.1), rgba(0,0,0,0));
+            background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0,0,0,0));
             border-radius: 20px; padding: 1.5rem;
             border: 1px solid var(--glass-border); margin-top: 1.5rem;
+            position: relative;
+            transition: 0.5s;
         }
+
+        .pr-badge {
+            position: absolute; top: 15px; right: 15px;
+            background: var(--green); color: black;
+            font-size: 0.65rem; font-weight: 900;
+            padding: 2px 6px; border-radius: 4px;
+            display: none; /* Shown via JS */
+        }
+
+        .pr-glow {
+            box-shadow: 0 0 30px var(--green);
+            border-color: var(--green-bright);
+        }
+
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
-        .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--orange-bright); }
-        .label { font-size: 0.85rem; color: #b08d65; font-weight: 600; }
+        .val { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; color: var(--green-bright); }
+        .label { font-size: 0.85rem; color: #65b08d; font-weight: 600; }
 
         .action-footer { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .btn-reset, .btn-copy {
+            background: transparent; border: 1px solid var(--glass-border);
+            color: var(--green); padding: 8px 18px; border-radius: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-reset:hover, .btn-copy:hover { background: rgba(0, 255, 136, 0.1); }
     </style>
 </head>
 <body>
 
 <div class="glass-card">
-    <div class="header-row">
-        <h2>Comp Avg</h2>
-        <select id="format" onchange="changeFormat()" style="background:none; color:var(--orange); border:none; outline:none; cursor:pointer; font-weight: bold; font-size: 0.9rem;">
-            <option value="ao5">Ao5</option>
-            <option value="mo3">Mo3</option>
-        </select>
-        <button class="btn-reset" onclick="resetAll()">RESET</button>
+    <div class="trinity-header">
+        <div class="header-item">
+            <span class="header-label">Format</span>
+            <select id="format" onchange="changeFormat()">
+                <option value="ao5">Ao5</option>
+                <option value="mo3">Mo3</option>
+            </select>
+        </div>
+        <div class="header-item">
+            <span class="header-label">WCA ID</span>
+            <input type="text" id="wcaId" class="wca-input" placeholder="2024..." onblur="fetchPR()">
+        </div>
+        <div class="header-item">
+            <span class="header-label">Event</span>
+            
+            <select id="event" onchange="fetchPR()">
+                <optgroup label="NxN">
+                    <option value="333">3x3x3 Cube</option>
+                    <option value="222">2x2x2 Cube</option>
+                    <option value="444">4x4x4 Cube</option>
+                    <option value="555">5x5x5 Cube</option>
+                    <option value="666">6x6x6 Cube</option>
+                    <option value="777">777x777 Cube</option>
+                </optgroup>
+            
+                <optgroup label="Sides">
+                    <option value="333oh">3x3x3 One-Handed</option>
+                    <option value="333fm">3x3x3 Fewest Moves</option>
+                    <option value="clock">Clock</option>
+                    <option value="minx">Megaminx</option>
+                    <option value="pyram">Pyraminx</option>
+                    <option value="skewb">Skewb</option>
+                    <option value="sq1">Square-1</option>
+                </optgroup>
+            
+                <optgroup label="Blindfolded">
+                    <option value="333bf">3x3x3 Blindfolded</option>
+                    <option value="444bf">4x4x4 Blindfolded</option>
+                    <option value="555bf">5x5x5 Blindfolded</option>
+                </optgroup>
+            
+            </select>
+        </div>
     </div>
 
     <div id="solveList"></div>
 
-    <div class="stats">
+    <div class="stats" id="statsCard">
+        <div class="pr-badge" id="prBadge">PR</div>
         <div class="stat-line">
-            <span class="label">Current Result</span>
+            <span class="label">Result</span>
             <span class="val" id="curAvg">--</span>
         </div>
         <div class="stat-line">
@@ -100,18 +180,41 @@
             <span class="label">WPA</span>
             <span class="val" id="worstAvg">--</span>
         </div>
+        <div id="targetLine" class="stat-line" style="border-top: 1px solid var(--glass-border); padding-top: 10px; margin-top: 5px; display:none;">
+            <span class="label">Target for PR</span>
+            <span class="val" id="targetVal" style="font-size: 1rem;">--</span>
+        </div>
     </div>
 
     <div class="action-footer">
-        <button class="btn-copy" onclick="copyToClipboard()">COPY RESULTS</button>
+        <button class="btn-copy" onclick="copyToClipboard()">COPY</button>
+        <button class="btn-reset" onclick="resetAll()">RESET</button>
     </div>
 </div>
 
 <script>
-    let state = JSON.parse(localStorage.getItem('cube_comp_v8')) || {
+    let officialPR = { single: Infinity, average: Infinity };
+    let state = JSON.parse(localStorage.getItem('cube_comp_v9')) || {
         format: 'ao5',
         solves: []
     };
+
+    async function fetchPR() {
+        const id = document.getElementById('wcaId').value.trim();
+        const ev = document.getElementById('event').value;
+        if (id.length < 4) return;
+
+        try {
+            const res = await fetch(`https://www.worldcubeassociation.org/api/v0/users/${id}`);
+            const data = await res.json();
+            const prs = data.user.personal_records;
+            if (prs[ev]) {
+                officialPR.single = prs[ev].single.best / 100;
+                officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
+                calculate();
+            }
+        } catch (e) { console.log("WCA ID not found"); }
+    }
 
     function syncArraySize() {
         const count = state.format === 'ao5' ? 5 : 3;
@@ -124,121 +227,83 @@
         if (!str || str.trim() === "") return null;
         if (str.includes(':')) {
             const parts = str.split(':');
-            const mins = parseFloat(parts[0]) || 0;
-            const secs = parseFloat(parts[1]) || 0;
-            return (mins * 60) + secs;
+            return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
         }
         return parseFloat(str);
     }
 
-    function formatTime(seconds) {
-        if (seconds === Infinity) return "DNF";
-        if (seconds === null || isNaN(seconds)) return "--";
-        if (seconds >= 60) {
-            const mins = Math.floor(seconds / 60);
-            const secs = (seconds % 60).toFixed(2);
-            return `${mins}:${secs.padStart(5, '0')}`;
-        }
-        return seconds.toFixed(2);
+    function formatTime(s) {
+        if (s === Infinity) return "DNF";
+        if (s === null || isNaN(s)) return "--";
+        return s >= 60 ? `${Math.floor(s/60)}:${(s%60).toFixed(2).padStart(5,'0')}` : s.toFixed(2);
     }
 
-    // This function only runs when the page loads or format changes
     function buildUI() {
         syncArraySize();
         const list = document.getElementById('solveList');
         list.innerHTML = '';
-        
         state.solves.forEach((solve, i) => {
             const div = document.createElement('div');
             div.className = `solve-row`;
             div.id = `row-${i}`;
             div.innerHTML = `
-                <input type="text" id="input-${i}" placeholder="Solve ${i+1}" value="${solve.raw}" 
-                    oninput="updateTime(${i}, this.value)" 
-                    onkeydown="handleKey(${i}, event)">
-                <button id="p2-${i}" class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
-                <button id="dnf-${i}" class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
+                <input type="text" class="time-input" id="input-${i}" placeholder="Solve ${i+1}" value="${solve.raw}" oninput="updateTime(${i}, this.value)">
+                <button class="btn-p ${solve.plusTwo ? 'active-plus' : ''}" onclick="togglePlus(${i})">+2</button>
+                <button class="btn-p ${solve.dnf ? 'active-dnf' : ''}" onclick="toggleDNF(${i})">DNF</button>
             `;
             list.appendChild(div);
         });
-        document.getElementById('format').value = state.format;
         calculate();
     }
 
-    function handleKey(i, e) {
-        if (e.key === 'Enter') {
-            const next = document.getElementById(`input-${i+1}`);
-            if (next) next.focus();
-        }
-    }
-
-    function updateTime(i, val) { 
-        state.solves[i].raw = val; 
-        calculate(); 
-        localStorage.setItem('cube_comp_v8', JSON.stringify(state)); 
-    }
-
-    function togglePlus(i) { 
-        state.solves[i].plusTwo = !state.solves[i].plusTwo; 
-        if(state.solves[i].plusTwo) state.solves[i].dnf = false; 
-        updateButtons(i);
-        calculate();
-    }
-
-    function toggleDNF(i) { 
-        state.solves[i].dnf = !state.solves[i].dnf; 
-        if(state.solves[i].dnf) state.solves[i].plusTwo = false; 
-        updateButtons(i);
-        calculate();
-    }
-
-    function updateButtons(i) {
-        const p2Btn = document.getElementById(`p2-${i}`);
-        const dnfBtn = document.getElementById(`dnf-${i}`);
-        p2Btn.className = `btn-p ${state.solves[i].plusTwo ? 'active-plus' : ''}`;
-        dnfBtn.className = `btn-p ${state.solves[i].dnf ? 'active-dnf' : ''}`;
-        localStorage.setItem('cube_comp_v8', JSON.stringify(state)); 
-    }
+    function updateTime(i, v) { state.solves[i].raw = v; calculate(); save(); }
+    function togglePlus(i) { state.solves[i].plusTwo = !state.solves[i].plusTwo; if(state.solves[i].plusTwo) state.solves[i].dnf = false; buildUI(); }
+    function toggleDNF(i) { state.solves[i].dnf = !state.solves[i].dnf; if(state.solves[i].dnf) state.solves[i].plusTwo = false; buildUI(); }
+    function save() { localStorage.setItem('cube_comp_v9', JSON.stringify(state)); }
 
     function getVal(solve) {
         if (solve.dnf) return Infinity;
         let n = parseToSeconds(solve.raw);
-        if (n === null || isNaN(n)) return null;
-        return solve.plusTwo ? n + 2 : n;
+        return (n === null) ? null : (solve.plusTwo ? n + 2 : n);
     }
 
     function calculate() {
         const times = state.solves.map(getVal);
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
+        
+        const curAvg = (filled.length === count) ? runMath(filled) : null;
+        document.getElementById('curAvg').innerText = formatTime(curAvg);
 
-        // Current Result
-        document.getElementById('curAvg').innerText = (filled.length === count) ? formatTime(runMath(filled)) : "--";
+        // PR System Logic
+        const isPR = (curAvg && curAvg < officialPR.average) || filled.some(t => t < officialPR.single);
+        document.getElementById('prBadge').style.display = isPR ? 'block' : 'none';
+        document.getElementById('statsCard').classList.toggle('pr-glow', isPR);
 
-        // BPA / WPA
+        // BPA/WPA Logic
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
             let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
             document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
+        }
+
+        // Target for PR (Ao5 only)
+        if (state.format === 'ao5' && filled.length === 4 && officialPR.average !== Infinity) {
+            document.getElementById('targetLine').style.display = 'flex';
+            let sorted = [...filled].sort((a,b)=>a-b);
+            let needed = (officialPR.average * 3) - (sorted[1] + sorted[2]); // Simplified target math
+            document.getElementById('targetVal').innerText = needed > 0 ? `< ${needed.toFixed(2)}` : "Impossible";
         } else {
-            document.getElementById('bestAvg').innerText = "Final";
-            document.getElementById('worstAvg').innerText = "Final";
+            document.getElementById('targetLine').style.display = 'none';
         }
 
-        // Handle Strikes WITHOUT rebuilding UI
-        const indexedTimes = times.map((t, idx) => ({ val: t, index: idx }));
-        const validForStrikes = indexedTimes.filter(t => t.val !== null);
-
-        // Reset all strikes first
-        for(let j=0; j<state.solves.length; j++) {
-            document.getElementById(`row-${j}`).classList.remove('strike');
-        }
-
-        if (state.format === 'ao5' && validForStrikes.length === 5) {
-            const sorted = [...validForStrikes].sort((a, b) => a.val - b.val);
-            document.getElementById(`row-${sorted[0].index}`).classList.add('strike');
-            document.getElementById(`row-${sorted[4].index}`).classList.add('strike');
+        // Strikes
+        times.forEach((_, i) => document.getElementById(`row-${i}`).classList.remove('strike'));
+        if (state.format === 'ao5' && filled.length === 5) {
+            const indexed = times.map((v, i) => ({v, i})).sort((a,b) => a.v - b.v);
+            document.getElementById(`row-${indexed[0].i}`).classList.add('strike');
+            document.getElementById(`row-${indexed[4].i}`).classList.add('strike');
         }
     }
 
@@ -251,28 +316,12 @@
         return s.includes(Infinity) ? Infinity : (s.reduce((a,b)=>a+b,0)/3);
     }
 
-    function changeFormat() { 
-        state.format = document.getElementById('format').value; 
-        state.solves = []; 
-        buildUI(); 
-    }
-
-    function resetAll() { 
-        if(confirm("Clear session?")) { 
-            state.solves = state.solves.map(() => ({ raw: '', plusTwo: false, dnf: false })); 
-            buildUI(); 
-        } 
-    }
-
+    function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
+    function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
+    
     function copyToClipboard() {
-        const timesStr = state.solves.map((s) => {
-            let time = s.dnf ? "DNF" : (s.raw || "0.00");
-            if (s.plusTwo) time += "+";
-            return time;
-        }).join(", ");
         const avg = document.getElementById('curAvg').innerText;
-        const text = `Comp Avg [${state.format.toUpperCase()}]: ${timesStr} | Result: ${avg}`;
-        navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+        navigator.clipboard.writeText(`Comp Result: ${avg}`).then(() => alert("Copied!"));
     }
 
     buildUI();
