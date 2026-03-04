@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comp Avg</title>
+    <title>Comp Avg - Emerald Final Pro</title>
     <style>
         :root {
             --green: #00ff88;
@@ -37,16 +37,14 @@
         .header-item { display: flex; flex-direction: column; gap: 5px; }
         .header-label { font-size: 0.65rem; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
 
-        /* FIXED DROPDOWN TEXT COLORS */
         select, .wca-input {
             background: rgba(0, 255, 136, 0.08);
             border: 1px solid var(--glass-border);
             border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none; width: 100%;
         }
-        select option, select optgroup {
-            background: #001a0f; /* Dark background for the list */
-            color: white;        /* White text for the list */
-        }
+        
+        /* Dropdown Visibility Fix */
+        select option, select optgroup { background: #001a0f; color: white; }
 
         .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .input-container { position: relative; flex-grow: 1; }
@@ -59,7 +57,7 @@
         .single-pr-symbol {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: var(--green); color: black; font-size: 0.6rem; font-weight: 900;
-            padding: 2px 4px; border-radius: 4px; display: none; pointer-events: none;
+            padding: 2px 4px; border-radius: 4px; display: none;
         }
 
         .stats {
@@ -139,7 +137,7 @@
     <div id="solveList"></div>
 
     <div class="stats" id="statsCard">
-        <div class="avg-pr-badge" id="avgPrBadge">PR AVG</div>
+        <div class="avg-pr-badge" id="avgPrBadge">AVG PR</div>
         <div class="stat-line"><span class="label">Result</span><span class="val" id="curAvg">--</span></div>
         <div class="stat-line"><span class="label">BPA</span><span class="val" id="bestAvg">--</span></div>
         <div class="stat-line"><span class="label">WPA</span><span class="val" id="worstAvg">--</span></div>
@@ -158,8 +156,8 @@
     function parseToSeconds(str) {
         if (!str || str.trim() === "") return null;
         if (str.includes(':')) {
-            const parts = str.split(':');
-            return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
+            const p = str.split(':');
+            return (parseFloat(p[0]) * 60) + parseFloat(p[1]);
         }
         return parseFloat(str);
     }
@@ -168,9 +166,9 @@
         if (s === Infinity) return "DNF";
         if (s === null || isNaN(s)) return "--";
         if (s >= 60) {
-            const mins = Math.floor(s / 60);
-            const secs = (s % 60).toFixed(2);
-            return `${mins}:${secs.padStart(5, '0')}`;
+            const m = Math.floor(s / 60);
+            const sc = (s % 60).toFixed(2);
+            return `${m}:${sc.padStart(5, '0')}`;
         }
         return s.toFixed(2);
     }
@@ -188,28 +186,23 @@
                 officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
                 calculate();
             }
-        } catch (e) { console.error("WCA fetch failed"); }
+        } catch (e) { console.error("Fetch failed"); }
     }
 
     function handleEventChange() {
         const ev = document.getElementById('event').value;
-        const mo3Events = ['666', '777', '333bf', '444bf', '555bf'];
-        state.format = mo3Events.includes(ev) ? 'mo3' : 'ao5';
+        state.format = ['666', '777', '333bf', '444bf', '555bf'].includes(ev) ? 'mo3' : 'ao5';
         document.getElementById('format').value = state.format;
         state.solves = [];
         buildUI();
         fetchPR();
     }
 
-    function syncArraySize() {
+    function buildUI() {
         const count = state.format === 'ao5' ? 5 : 3;
         if (state.solves.length !== count) {
             state.solves = Array.from({length: count}, () => ({ raw: '', plusTwo: false, dnf: false }));
         }
-    }
-
-    function buildUI() {
-        syncArraySize();
         const list = document.getElementById('solveList');
         list.innerHTML = '';
         state.solves.forEach((solve, i) => {
@@ -240,7 +233,6 @@
             return (n === null) ? null : (s.plusTwo ? n + 2 : n);
         });
 
-        // Single PR Badges
         times.forEach((t, i) => {
             const badge = document.getElementById(`pr-single-${i}`);
             if (badge) badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
@@ -249,20 +241,17 @@
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
         
-        // RESULT
         const curAvg = (filled.length === count) ? runMath(filled) : null;
         document.getElementById('curAvg').innerText = formatTime(curAvg);
 
-        // PR GLOW
         const isAvgPR = (curAvg && curAvg < officialPR.average);
         document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
         document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
-        // BPA & WPA logic restored
+        // BPA & WPA
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
-            
             let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
             document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
         } else {
@@ -276,9 +265,9 @@
     function handleStrikes(times, filled) {
         state.solves.forEach((_, i) => document.getElementById(`row-${i}`).classList.remove('strike'));
         if (state.format === 'ao5' && filled.length === 5) {
-            const indexed = times.map((v, i) => ({v, i})).sort((a,b) => a.v - b.v);
-            document.getElementById(`row-${indexed[0].i}`).classList.add('strike');
-            document.getElementById(`row-${indexed[4].i}`).classList.add('strike');
+            const idx = times.map((v, i) => ({v, i})).sort((a,b) => a.v - b.v);
+            document.getElementById(`row-${idx[0].i}`).classList.add('strike');
+            document.getElementById(`row-${idx[4].i}`).classList.add('strike');
         }
     }
 
@@ -292,21 +281,16 @@
     }
 
     function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
+    
     function copyResult() {
         const ev = document.getElementById('event').options[document.getElementById('event').selectedIndex].text;
-        const formatLabel = state.format === 'ao5' ? 'Ao5' : 'Mo3';
+        const fmt = state.format === 'ao5' ? 'Ao5' : 'Mo3';
         const res = document.getElementById('curAvg').innerText;
-        
-        // Maps the solves to their display strings (Time, +2, or DNF)
-        const timesList = state.solves.map(s => {
-            if (s.dnf) return "DNF";
-            return s.raw + (s.plusTwo ? "+" : "");
-        }).filter(t => t !== "").join(", ");
-    
-        const finalString = `${ev}: ${timesList}: ${formatLabel} = ${res}`;
-        
-        navigator.clipboard.writeText(finalString).then(() => alert("Copied: " + finalString));
+        const list = state.solves.map(s => s.dnf ? "DNF" : (s.raw + (s.plusTwo ? "+" : ""))).filter(t => t !== "").join(", ");
+        const str = `${ev}: ${list}: ${fmt} = ${res}`;
+        navigator.clipboard.writeText(str).then(() => alert("Copied!"));
     }
+
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
 
     buildUI();
