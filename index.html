@@ -37,10 +37,15 @@
         .header-item { display: flex; flex-direction: column; gap: 5px; }
         .header-label { font-size: 0.65rem; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
 
+        /* FIXED DROPDOWN TEXT COLORS */
         select, .wca-input {
             background: rgba(0, 255, 136, 0.08);
             border: 1px solid var(--glass-border);
             border-radius: 8px; color: white; padding: 8px; font-size: 0.8rem; outline: none; width: 100%;
+        }
+        select option, select optgroup {
+            background: #001a0f; /* Dark background for the list */
+            color: white;        /* White text for the list */
         }
 
         .solve-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
@@ -101,7 +106,7 @@
         </div>
         <div class="header-item">
             <span class="header-label">WCA ID</span>
-            <input type="text" id="wcaId" class="wca-input" placeholder="2022NAIK01" oninput="fetchPR()">
+            <input type="text" id="wcaId" class="wca-input" placeholder="2022..." oninput="fetchPR()">
         </div>
         <div class="header-item">
             <span class="header-label">Event</span>
@@ -127,9 +132,6 @@
                     <option value="444bf">4x4 BLD</option>
                     <option value="555bf">5x5 BLD</option>
                 </optgroup>
-                <optgroup label="Challenges">
-                    <option value="333fm">3x3 FMC</option>
-                </optgroup>
             </select>
         </div>
     </div>
@@ -137,9 +139,10 @@
     <div id="solveList"></div>
 
     <div class="stats" id="statsCard">
-        <div class="avg-pr-badge" id="avgPrBadge">AVG PR</div>
+        <div class="avg-pr-badge" id="avgPrBadge">PR AVG</div>
         <div class="stat-line"><span class="label">Result</span><span class="val" id="curAvg">--</span></div>
         <div class="stat-line"><span class="label">BPA</span><span class="val" id="bestAvg">--</span></div>
+        <div class="stat-line"><span class="label">WPA</span><span class="val" id="worstAvg">--</span></div>
     </div>
 
     <div class="action-footer">
@@ -152,14 +155,11 @@
     let officialPR = { single: Infinity, average: Infinity };
     let state = { format: 'ao5', solves: [] };
 
-    // --- MINUTES PARSING LOGIC ---
     function parseToSeconds(str) {
         if (!str || str.trim() === "") return null;
         if (str.includes(':')) {
             const parts = str.split(':');
-            const mins = parseFloat(parts[0]) || 0;
-            const secs = parseFloat(parts[1]) || 0;
-            return (mins * 60) + secs;
+            return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
         }
         return parseFloat(str);
     }
@@ -179,7 +179,6 @@
         const id = document.getElementById('wcaId').value.trim().toUpperCase();
         const ev = document.getElementById('event').value;
         if (id.length < 10) return;
-
         try {
             const res = await fetch(`https://www.worldcubeassociation.org/api/v0/persons/${id}`);
             const data = await res.json();
@@ -189,12 +188,12 @@
                 officialPR.average = prs[ev].average ? prs[ev].average.best / 100 : Infinity;
                 calculate();
             }
-        } catch (e) { console.error("API error"); }
+        } catch (e) { console.error("WCA fetch failed"); }
     }
 
     function handleEventChange() {
         const ev = document.getElementById('event').value;
-        const mo3Events = ['666', '777', '333bf', '444bf', '555bf', '333fm'];
+        const mo3Events = ['666', '777', '333bf', '444bf', '555bf'];
         state.format = mo3Events.includes(ev) ? 'mo3' : 'ao5';
         document.getElementById('format').value = state.format;
         state.solves = [];
@@ -241,6 +240,7 @@
             return (n === null) ? null : (s.plusTwo ? n + 2 : n);
         });
 
+        // Single PR Badges
         times.forEach((t, i) => {
             const badge = document.getElementById(`pr-single-${i}`);
             if (badge) badge.style.display = (t !== null && t < officialPR.single) ? 'block' : 'none';
@@ -248,19 +248,26 @@
 
         const filled = times.filter(t => t !== null);
         const count = state.format === 'ao5' ? 5 : 3;
-        const curAvg = (filled.length === count) ? runMath(filled) : null;
         
+        // RESULT
+        const curAvg = (filled.length === count) ? runMath(filled) : null;
         document.getElementById('curAvg').innerText = formatTime(curAvg);
 
+        // PR GLOW
         const isAvgPR = (curAvg && curAvg < officialPR.average);
         document.getElementById('avgPrBadge').style.display = isAvgPR ? 'block' : 'none';
         document.getElementById('statsCard').classList.toggle('pr-glow', isAvgPR);
 
+        // BPA & WPA logic restored
         if (filled.length < count) {
             let bpaArr = [...filled]; while(bpaArr.length < count) bpaArr.push(0);
             document.getElementById('bestAvg').innerText = formatTime(runMath(bpaArr));
+            
+            let wpaArr = [...filled]; while(wpaArr.length < count) wpaArr.push(Infinity);
+            document.getElementById('worstAvg').innerText = formatTime(runMath(wpaArr));
         } else {
             document.getElementById('bestAvg').innerText = "Final";
+            document.getElementById('worstAvg').innerText = "Final";
         }
         
         handleStrikes(times, filled);
@@ -285,10 +292,7 @@
     }
 
     function resetAll() { if(confirm("Clear?")) { state.solves = []; buildUI(); } }
-    function copyResult() { 
-        navigator.clipboard.writeText(document.getElementById('curAvg').innerText); 
-        alert("Copied!"); 
-    }
+    function copyResult() { navigator.clipboard.writeText(document.getElementById('curAvg').innerText); alert("Copied!"); }
     function changeFormat() { state.format = document.getElementById('format').value; state.solves = []; buildUI(); }
 
     buildUI();
